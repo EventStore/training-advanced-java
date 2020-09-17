@@ -1,7 +1,6 @@
 package com.eventstore.scheduling.domain.readmodel.availableslots;
 
-import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlot;
-import com.eventstore.scheduling.domain.writemodel.doctorday.SlotId;
+import com.eventstore.scheduling.domain.doctorday.SlotId;
 import io.vavr.collection.List;
 
 import java.time.LocalDate;

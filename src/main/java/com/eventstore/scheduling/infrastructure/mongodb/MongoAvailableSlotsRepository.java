@@ -2,7 +2,7 @@ package com.eventstore.scheduling.infrastructure.mongodb;
 
 import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlotsRepository;
 import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlot;
-import com.eventstore.scheduling.domain.writemodel.doctorday.SlotId;
+import com.eventstore.scheduling.domain.doctorday.SlotId;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;

@@ -1,48 +1,61 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
-import com.eventstore.dbclient.Subscription;
-import com.eventstore.scheduling.application.eventsourcing.*;
-import com.eventstore.scheduling.domain.writemodel.State;
-import io.vavr.collection.List;
-import io.vavr.control.Option;
-
-import java.time.Instant;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import com.eventstore.dbclient.ResolvedEvent;
+import com.eventstore.dbclient.StreamRevision;
+import com.eventstore.dbclient.StreamsClient;
+import com.eventstore.dbclient.SubscriptionListener;
+import com.eventstore.scheduling.eventsourcing.CommandMetadata;
+import com.eventstore.scheduling.eventsourcing.CommandStore;
+import com.eventstore.scheduling.eventsourcing.EventStore;
+import com.eventstore.scheduling.infrastructure.commands.Dispatcher;
+import lombok.SneakyThrows;
+import lombok.val;
 
 public class EsCommandStore implements CommandStore {
 
-  private final String streamId;
-  private final EsEventStoreClient<CommandMetadata> eventStore;
+    private final EventStore eventStore;
+    private final StreamsClient streamsClient;
+    private final Dispatcher dispatcher;
+    private final String tenantPrefix;
+    private final EsCommandSerde commandSerde;
 
-  public EsCommandStore(String streamId, EsEventStoreClient<CommandMetadata> eventStore) {
-    this.streamId = streamId;
-    this.eventStore = eventStore;
-  }
+    private final String streamName = "async-command-handler";
 
-  @Override
-  public void send(Object command, CommandMetadata metadata) {
-    eventStore.appendToStream(streamId, List.of(command), metadata);
-  }
+    public EsCommandStore(EventStore eventStore, StreamsClient streamsClient, Dispatcher dispatcher, String tenantPrefix, EsCommandSerde commandSerde) {
+        this.eventStore = eventStore;
+        this.streamsClient = streamsClient;
+        this.dispatcher = dispatcher;
+        this.tenantPrefix = tenantPrefix;
+        this.commandSerde = commandSerde;
+    }
 
-  @Override
-  public <C, E, Er, S extends State<S, E>> CompletableFuture<Subscription> subscribe(
-      CommandHandler<C, E, Er, S> commandHandler, CheckpointStore checkpointStore) {
-    return new PersistentSubscriptionFactory<>(eventStore, checkpointStore)
-        .subscribeToAStream(
-            new SubscriptionId("async_command_handler-" + streamId),
-            streamId,
-            new MessageHandler<CommandMetadata>() {
-              @Override
-              public void handle(
-                  Object message,
-                  CommandMetadata metadata,
-                  UUID messageId,
-                  Instant occurredAt,
-                  Version position,
-                  Option<Version> streamPosition) {
-                commandHandler.handle((C) message, metadata);
-              }
-            });
-  }
+    @Override
+    public void send(Object command, CommandMetadata metadata) {
+        eventStore.appendCommand(streamName, command, metadata);
+    }
+
+    @SneakyThrows
+    @Override
+    public void start() {
+        streamsClient.subscribeToStream("[" + tenantPrefix + "]" + streamName, StreamRevision.END, false, new Listener()).get();
+    }
+
+    private void eventAppeared(ResolvedEvent event) {
+        if (event.getEvent().getEventType().startsWith("$")) {
+            return;
+        }
+
+        val deserialized = commandSerde.deserialize(event);
+
+        if (dispatcher != null) {
+            dispatcher.dispatch(deserialized._1, deserialized._2);
+        }
+    }
+
+    private class Listener extends SubscriptionListener {
+        @Override
+        public void onEvent(com.eventstore.dbclient.Subscription subscription, ResolvedEvent event) {
+            eventAppeared(event);
+        }
+    }
 }

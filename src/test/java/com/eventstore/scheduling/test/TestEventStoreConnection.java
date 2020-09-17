@@ -1,5 +1,6 @@
 package com.eventstore.scheduling.test;
 
+import com.eventstore.dbclient.EventStoreConnection;
 import com.eventstore.dbclient.StreamsClient;
 import com.eventstore.dbclient.Timeouts;
 import com.eventstore.dbclient.UserCredentials;
@@ -11,14 +12,10 @@ import javax.net.ssl.SSLException;
 
 public interface TestEventStoreConnection {
   UserCredentials credentials = new UserCredentials("admin", "changeit");
-  StreamsClient streamsClient =
-      new StreamsClient("localhost", 2113, credentials, Timeouts.DEFAULT, getClientSslContext());
-
-  private static SslContext getClientSslContext() {
-    try {
-      return GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    } catch (SSLException ignored) {
-    }
-    return null;
-  }
+  StreamsClient streamsClient = EventStoreConnection
+          .builder()
+          .insecure()
+          .defaultUserCredentials(new UserCredentials("admin", "changeit"))
+          .createSingleNodeConnection("localhost", 2113)
+          .newStreamsClient();
 }

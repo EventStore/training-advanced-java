@@ -1,7 +1,7 @@
 package com.eventstore.scheduling.infrastructure.mongodb;
 
 import com.eventstore.scheduling.domain.readmodel.archivabledays.ArchivableDaysRepository;
-import com.eventstore.scheduling.domain.writemodel.doctorday.DayId;
+import com.eventstore.scheduling.domain.doctorday.DayId;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;

@@ -1,44 +1,52 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
-import com.eventstore.scheduling.application.eventsourcing.*;
-import com.eventstore.scheduling.domain.writemodel.State;
+import com.eventstore.scheduling.eventsourcing.*;
 import io.vavr.collection.List;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.var;
 
 import static io.vavr.API.Some;
 
 public class EsAggregateStore implements AggregateStore {
-  private final EventStoreClient<EventMetadata> eventStoreClient;
+  private final EventStore eventStore;
+  private final int snapshotThreshold;
 
-  public EsAggregateStore(EventStoreClient<EventMetadata> eventStoreClient) {
-    this.eventStoreClient = eventStoreClient;
+  public EsAggregateStore(EventStore eventStore, int snapshotThreshold) {
+    this.eventStore = eventStore;
+    this.snapshotThreshold = snapshotThreshold;
   }
 
   @Override
-  public <C, E, Er, S extends State<S, E>> Aggregate<C, E, Er, S> commit(
-      Aggregate<C, E, Er, S> aggregate, EventMetadata metatdata) {
+  public <T extends AggregateRoot> void save(T aggregate, CommandMetadata metadata) {
     val changes = aggregate.getChanges();
-    if (aggregate.isNew()) {
-      eventStoreClient.createNewStream(aggregate.getId().toString(), changes, metatdata);
-    } else {
-      eventStoreClient.appendToStream(
-          aggregate.getId().toString(), changes, metatdata, aggregate.getVersion());
+    eventStore.appendEvents("doctorday-" + aggregate.getId(), aggregate.getVersion(), metadata, changes);
+
+    if (aggregate instanceof AggregateRootSnapshot) {
+      val snapshotAggregate = (AggregateRootSnapshot) aggregate;
+      if((snapshotAggregate.getVersion() + changes.length() + 1) - snapshotAggregate.getSnapshotVersion() >= snapshotThreshold) {
+        eventStore.appendSnapshot("doctorday-" + aggregate.getId(), aggregate.getVersion() + changes.length(), snapshotAggregate.getSnapshot());
+      }
     }
-    return aggregate.markAsCommitted();
   }
 
-  @SneakyThrows
   @Override
-  public <C, E, Er, S extends State<S, E>> Aggregate<C, E, Er, S> reconsititute(
-      Aggregate<C, E, Er, S> aggregate) {
-    List<E> events =
-        (List<E>)
-            eventStoreClient
-                .readFromStream(
-                    aggregate.getId().toString(), Some(aggregate.getVersion().incrementBy(1)))
-                .map(MessageEnvelope::getData);
+  public <T extends AggregateRoot> T load(T aggregate, String aggregateId) {
+    var version = -1L;
+    if (aggregate instanceof AggregateRootSnapshot) {
+      val snapshotEnvelope = eventStore.loadSnapshot("doctorday-" + aggregateId);
+      if (snapshotEnvelope != null) {
+        val snapshotAggregate = (AggregateRootSnapshot) aggregate;
+        snapshotAggregate.loadSnapshot(snapshotEnvelope.getSnapshot(), snapshotEnvelope.getVersion().getValue());
+        version = snapshotEnvelope.getVersion().getValue() + 1L;
+      }
+    }
 
-    return aggregate.reconstitute(events);
+    val events = eventStore.loadEvents("doctorday-" + aggregateId, Some(version));
+
+    aggregate.load(events);
+    aggregate.clearChanges();
+
+    return aggregate;
   }
 }

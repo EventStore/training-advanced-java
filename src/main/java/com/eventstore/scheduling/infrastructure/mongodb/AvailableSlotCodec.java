@@ -1,8 +1,8 @@
 package com.eventstore.scheduling.infrastructure.mongodb;
 
 import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlot;
-import com.eventstore.scheduling.domain.writemodel.doctorday.DayId;
-import com.eventstore.scheduling.domain.writemodel.doctorday.SlotId;
+import com.eventstore.scheduling.domain.doctorday.DayId;
+import com.eventstore.scheduling.domain.doctorday.SlotId;
 import lombok.val;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;

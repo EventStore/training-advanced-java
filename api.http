@@ -5,7 +5,7 @@ X-CorrelationId: test-correlation-id
 X-CausationId: test-causation-id
 
 {
-  "date": "2020-08-01",
+  "date": "2020-10-06",
   "doctorId": "1234",
   "slots": [
     {
@@ -24,32 +24,32 @@ X-CausationId: test-causation-id
 }
 
 ### Get slots available on a date
-GET http://localhost:8080/api/slots/2020-08-01/available
+GET http://localhost:8080/api/slots/2020-10-06/available
 
 ### Book a slot
-POST http://localhost:8080/api/slots/1234_2020-08-01/book
+POST http://localhost:8080/api/slots/1234_2020-10-06/book
 Content-Type: application/json
 X-CorrelationId: test-correlation-id
 X-CausationId: test-causation-id
 
 {
-  "slotId": "afb75050-f0ff-41ff-b0db-633a2e77e818",
+  "slotId": "150598bb-fc32-4490-8641-0c8acd012e82",
   "patientId": "John Doe"
 }
 
 ### Cancel slot booking
-POST http://localhost:8080/api/slots/1234_2020-07-01/cancel-booking
+POST http://localhost:8080/api/slots/1234_2020-10-06/cancel-booking
 Content-Type: application/json
 X-CorrelationId: test-correlation-id
 X-CausationId: test-causation-id
 
 {
-  "slotId": "279b685a-10ab-4336-9f1f-f0ce7babd9ef",
+  "slotId": "150598bb-fc32-4490-8641-0c8acd012e82",
   "reason": "No longer needed"
 }
 
 ### Send day started event
-POST http://localhost:8080/api/calendar/2020-08-02/day-started
+POST http://localhost:8080/api/calendar/2020-10-07/day-started
 Content-Type: application/json
 X-CorrelationId: test-correlation-id
 X-CausationId: test-causation-id

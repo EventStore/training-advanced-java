@@ -1,128 +1,69 @@
 package com.eventstore.scheduling.test;
 
-import com.eventstore.scheduling.application.eventsourcing.Aggregate;
-import com.eventstore.scheduling.application.eventsourcing.Version;
-import com.eventstore.scheduling.domain.writemodel.AggregateId;
-import com.eventstore.scheduling.domain.writemodel.AggregateLogic;
-import com.eventstore.scheduling.domain.writemodel.State;
+import com.eventstore.scheduling.domain.service.RandomIdGenerator;
+import com.eventstore.scheduling.eventsourcing.*;
+import com.eventstore.scheduling.infrastructure.commands.CommandHandler;
+import com.eventstore.scheduling.infrastructure.commands.CommandHandlerMap;
+import com.eventstore.scheduling.infrastructure.commands.Dispatcher;
 import io.vavr.collection.List;
-import io.vavr.control.Either;
-import lombok.val;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.SneakyThrows;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class AggregateTest<C, E, Er, S extends State<S, E>> {
-  protected final ReplayableIdGenerator idGenerator = new ReplayableIdGenerator();
-  protected Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
-  private Aggregate<C, E, Er, S> aggregate = null;
+public abstract class AggregateTest<A extends AggregateRoot, T> {
+  private Dispatcher dispatcher;
+  protected final T repository;
+  private final AggregateRoot aggregate;
+  private Throwable exception;
+  protected ReplayableIdGenerator idGenerator = new ReplayableIdGenerator();
+  protected RandomIdGenerator randomIdGenerator = new RandomIdGenerator();
 
-  private Either<Er, Aggregate<C, E, Er, S>> result = null;
+  protected abstract AggregateRoot aggregateInstance();
+  protected abstract T repositoryInstance(AggregateStore aggregateStore);
 
-  protected abstract AggregateLogic<C, E, Er, S> aggregateLogic();
-
-  protected void given(List<E> events) {
-    aggregate = aggregate.reconstitute(events);
+  public AggregateTest() {
+    aggregate = aggregateInstance();
+    repository = repositoryInstance(new FakeAggregateStore(aggregate));
   }
 
-  protected void when(C command) {
-    idGenerator.reset();
-    result = aggregate.handle(command);
-    idGenerator.replay();
+  public <CH extends CommandHandler> void registerHandlers(CH commandHandler) {
+    dispatcher = new Dispatcher(new CommandHandlerMap(commandHandler));
   }
 
-  protected void then(List<E> events) {
-    if (result.isLeft()) {
-      throw new RuntimeException(
-          "Expected " + events.toString() + " but got " + result.getLeft().toString());
-    } else {
-      result.forEach(
-          (aggregate) -> {
-            assertEquals(aggregate.getChanges(), events);
+  protected void given(Object... events) {
+    exception = null;
+    aggregate.load(List.of(events));
+  }
 
-            val version = aggregate.getVersion();
-            val committed = aggregate.markAsCommitted();
-            assertEquals(
-                committed.getVersion(), version.incrementBy(aggregate.getChanges().length()));
-          });
+  protected void when(Object command) {
+    try {
+      aggregate.clearChanges();
+      idGenerator.replay();
+      dispatcher.dispatch(command, new CommandMetadata(CorrelationId.create(randomIdGenerator), CausationId.create(randomIdGenerator)));
+    } catch (Throwable e) {
+      exception = e;
     }
   }
 
-  protected void then(Er error) {
-    if (result.isLeft()) {
-      assertEquals(result.getLeft(), error);
-    } else {
-      result.forEach(
-          (aggregate) -> {
-            throw new RuntimeException(
-                "Expected " + error.toString() + " but got " + aggregate.getChanges().toString());
-          });
+  @SneakyThrows
+  protected void then(Consumer<List<Object>> events) {
+    if (exception != null) {
+      throw exception;
     }
-  }
 
-  @BeforeEach
-  void beforeEach() {
-    aggregate =
-        new Aggregate(
-            new AggregateId(randomString(), "test"),
-            aggregateLogic(),
-            aggregateLogic().initialState(),
-            Version.fresh,
-            List.empty());
-    result = null;
+    events.accept(aggregate.getChanges());
+    idGenerator.reset();
+  }
+  @SneakyThrows
+  protected void then(List<Object> events) {
+    assertEquals(events, aggregate.getChanges());
     idGenerator.reset();
   }
 
-  protected String randomString() {
-    return UUID.randomUUID().toString();
+  protected <E extends Throwable> void then(Class<E> clazz) {
+    assertEquals(clazz, exception.getClass());
+    idGenerator.reset();
   }
-
-  //
-  //    protected String id;
-  //    protected A aggregate;
-  //
-  //    private Try<List<? extends Event>> result;
-  //
-  //    protected String randomString() {
-  //        return UUID.randomUUID().toString();
-  //    }
-  //
-  //    @BeforeEach
-  //    void beforeEach() {
-  //        id = randomString();
-  //        aggregate = newInstance();
-  //        result = null;
-  //        uuidGenerator.reset();
-  //    }
-  //
-  //    @Test
-  //    void canBeInitialised() {
-  //        assertEquals(aggregate.getId(), id);
-  //        assertEquals(aggregate.getVersion(), -1L);
-  //    }
-  //
-  //    protected void given(Event... events) {
-  //        aggregate.reconstitute(List.of(events));
-  //    }
-  //
-  //
-  //    protected void then(Event event) {
-  //        List<? extends Event> changes = result.get();
-  //        assertEquals(changes, List.of(event));
-  //
-  //        val version = aggregate.getVersion();
-  //        aggregate.markAsCommitted();
-  //        assertEquals(aggregate.getVersion(), version + changes.length());
-  //    }
-  //
-  //    protected void then(Error error) {
-  //        assertEquals(error, result.failed().get());
-  //    }
-  //
-  //    protected abstract A newInstance();
 }

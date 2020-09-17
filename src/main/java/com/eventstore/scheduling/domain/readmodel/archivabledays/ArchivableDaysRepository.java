@@ -1,6 +1,6 @@
 package com.eventstore.scheduling.domain.readmodel.archivabledays;
 
-import com.eventstore.scheduling.domain.writemodel.doctorday.DayId;
+import com.eventstore.scheduling.domain.doctorday.DayId;
 import io.vavr.collection.List;
 
 import java.time.LocalDate;

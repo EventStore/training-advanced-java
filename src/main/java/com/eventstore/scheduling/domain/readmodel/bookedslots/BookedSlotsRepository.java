@@ -1,7 +1,7 @@
 package com.eventstore.scheduling.domain.readmodel.bookedslots;
 
-import com.eventstore.scheduling.domain.writemodel.doctorday.SlotId;
-import com.eventstore.scheduling.domain.writemodel.doctorday.state.PatientId;
+import com.eventstore.scheduling.domain.doctorday.SlotId;
+import com.eventstore.scheduling.domain.doctorday.PatientId;
 
 import java.time.Month;
 
