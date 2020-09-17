@@ -40,9 +40,10 @@ public class DayArchiverProcessManager extends EventHandler {
         when(DayScheduled.class, dayScheduled -> repository.add(dayScheduled.getDate(), dayScheduled.getDayId()));
 
         when(DayScheduleArchived.class, dayScheduleArchived -> {
-            @NonNull DayId dayId = dayScheduleArchived.getDayId();
-            archiveAndPurge(dayId);
-            repository.remove(dayId);
+            // Get events from store
+            // save to cold storage
+            // Get the latest version from the store
+            // Truncate stream upto last version
         });
 
         when(CalendarDayStarted.class, calendarDayStarted -> {
@@ -56,20 +57,5 @@ public class DayArchiverProcessManager extends EventHandler {
         commandStore.send(
                 new ArchiveDaySchedule(dayId),
                 new CommandMetadata(CorrelationId.create(idGenerator), CausationId.create(idGenerator)));
-    }
-
-    @SneakyThrows
-    private void archiveAndPurge(DayId dayId) {
-        DoctorDayId aggregateId = new DoctorDayId(dayId);
-        List<Object> events =
-                eventStoreClient.loadEvents(aggregateId.toString(), None());
-        events
-                .reverse()
-                .headOption()
-                .forEach(
-                        (lastEvent) -> {
-                            coldStorage.saveAll(aggregateId.toString(), events);
-                            eventStoreClient.truncateStream(aggregateId.toString(), eventStoreClient.getLastVersion(aggregateId.toString()));
-                        });
     }
 }
