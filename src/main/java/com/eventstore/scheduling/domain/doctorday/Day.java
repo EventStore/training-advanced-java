@@ -138,18 +138,7 @@ public class Day extends AggregateRootSnapshot {
     }
 
     public void cancel() {
-        isCancelledOrArchived();
-        isNotScheduled();
 
-        slots.getBookedSlots().forEach(slot -> {
-            raise(new SlotBookingCancelled(dayId, slot.getSlotId(), "doctor cancelled the day"));
-        });
-
-        slots.getSlots().forEach(slot -> {
-            raise(new SlotScheduleCancelled(dayId, slot.getSlotId()));
-        });
-
-        raise(new DayScheduleCancelled(dayId, "doctor cancelled the day"));
     }
 
     private void when(DayScheduled event) {

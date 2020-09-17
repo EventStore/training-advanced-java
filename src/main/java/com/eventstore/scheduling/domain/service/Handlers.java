@@ -36,13 +36,6 @@ public class Handlers extends CommandHandler {
             aggregate.cancelBookedSlot(command.getSlotId(), command.getReason());
             dayRepository.save(aggregate, metadata);
         });
-        register(CancelDaySchedule.class, tuple -> {
-            val command = tuple._1;
-            val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.cancel();
-            dayRepository.save(aggregate, metadata);
-        });
         register(ArchiveDaySchedule.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
