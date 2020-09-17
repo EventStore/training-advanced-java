@@ -32,14 +32,10 @@ public class EsAggregateStore implements AggregateStore {
 
   @Override
   public <T extends AggregateRoot> T load(T aggregate, String aggregateId) {
+
     var version = -1L;
     if (aggregate instanceof AggregateRootSnapshot) {
-      val snapshotEnvelope = eventStore.loadSnapshot("doctorday-" + aggregateId);
-      if (snapshotEnvelope != null) {
-        val snapshotAggregate = (AggregateRootSnapshot) aggregate;
-        snapshotAggregate.loadSnapshot(snapshotEnvelope.getSnapshot(), snapshotEnvelope.getVersion().getValue());
-        version = snapshotEnvelope.getVersion().getValue() + 1L;
-      }
+      version = loadSnapshot((AggregateRootSnapshot) aggregate, aggregateId, version);
     }
 
     val events = eventStore.loadEvents("doctorday-" + aggregateId, Some(version));
@@ -48,5 +44,12 @@ public class EsAggregateStore implements AggregateStore {
     aggregate.clearChanges();
 
     return aggregate;
+  }
+
+  private <T extends AggregateRoot> long loadSnapshot(AggregateRootSnapshot aggregate, String aggregateId, long version) {
+    // Load snapshot from the store
+    // If there is one then load it into the aggregate
+    // Return next expected version
+    return -1L;
   }
 }

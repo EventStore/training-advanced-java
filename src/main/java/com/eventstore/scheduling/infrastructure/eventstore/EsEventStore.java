@@ -93,10 +93,9 @@ public class EsEventStore implements EventStore {
     @SneakyThrows
     @Override
     public void appendSnapshot(String streamId, Long version, Object snapshot) {
-
-        val proposed = serde.serializeSnapshot(snapshot, version);
-
-        client.appendToStream(getPrefixedStreamId("snapshot-" + streamId), SpecialStreamRevision.ANY, List.of(proposed).asJava()).get();
+        // Serialize the snapshot
+        // Get snapshot stream name
+        // Append snapshot to stream
     }
 
     @Override
