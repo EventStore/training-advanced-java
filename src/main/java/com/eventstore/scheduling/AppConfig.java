@@ -5,6 +5,7 @@ import com.eventstore.dbclient.StreamsClient;
 import com.eventstore.dbclient.UserCredentials;
 import com.eventstore.scheduling.application.AvailableSlotsProjection;
 import com.eventstore.scheduling.application.DayArchiverProcessManager;
+import com.eventstore.scheduling.application.OverbookingProcessManager;
 import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlotsRepository;
 import com.eventstore.scheduling.domain.service.Handlers;
 import com.eventstore.scheduling.domain.service.RandomIdGenerator;

@@ -23,27 +23,12 @@ public class OverbookingProcessManager extends EventHandler {
       int bookingLimitPerPatient,
       IdGenerator idGenerator) {
 
-    when(SlotScheduled.class, slotScheduled -> repository.addSlot(
-            new Slot(
-                    slotScheduled.getSlotId(),
-                    slotScheduled.getDayId(),
-                    slotScheduled.getStartDateTime().getMonth())));
+    when(SlotScheduled.class, slotScheduled -> {});
 
     when(SlotBooked.class, slotBooked -> {
-      repository.markSlotAsBooked(slotBooked.getSlotId(), slotBooked.getPatientId());
 
-      val slot = repository.getSlot(slotBooked.getSlotId());
-      val count = repository.countByPatientAndMonth(slotBooked.getPatientId(), slot.getMonth());
-
-      if (count > bookingLimitPerPatient) {
-        commandStore.send(
-                new CancelSlotBooking(slot.getDayId(), slot.getSlotId(), "Overbooking"),
-                new CommandMetadata(
-                        CorrelationId.create(idGenerator),
-                        CausationId.create(idGenerator)));
-      }
     });
 
-    when(SlotBookingCancelled.class, slotBookedCancelled -> repository.markSlotAsAvailable(slotBookedCancelled.getSlotId()));
+    when(SlotBookingCancelled.class, slotBookedCancelled -> {});
   }
 }
