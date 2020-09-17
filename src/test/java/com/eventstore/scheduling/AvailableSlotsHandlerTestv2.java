@@ -22,6 +22,19 @@ import static com.eventstore.scheduling.test.TestFixtures.*;
 
 public class AvailableSlotsHandlerTestv2 extends HandlerTest implements TestMongoConnection {
 
+  @Override
+  protected boolean enableAtLeastOnceMonkey() {
+    // Repeats every event 2x, e.g.: 1 1 2 2 3 3
+    return false;
+  }
+
+  @Override
+  protected boolean enableAtLeastOnceGorilla() {
+
+    // Repeats all elements except last e.g.: 1 2 3 1 2
+    return false;
+  }
+
   private final MongoAvailableSlotsRepositoryv2 repository = new MongoAvailableSlotsRepositoryv2(getMongo());
   private final EventHandler handler = new AvailableSlotsProjectionv2(repository);
 

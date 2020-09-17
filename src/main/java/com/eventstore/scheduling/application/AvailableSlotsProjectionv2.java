@@ -11,17 +11,20 @@ import com.eventstore.scheduling.infrastructure.projections.EventHandler;
 
 public class AvailableSlotsProjectionv2 extends EventHandler {
   public AvailableSlotsProjectionv2(MongoAvailableSlotsRepositoryv2 repository) {
-    when(SlotScheduled.class, scheduled -> repository.addSlot(
-            new AvailableSlot(
-                    scheduled.getDayId(),
-                    scheduled.getSlotId(),
-                    scheduled.getStartDateTime().toLocalDate(),
-                    scheduled.getStartDateTime().toLocalTime(),
-                    scheduled.getDuration().toString())));
+    when(SlotScheduled.class, scheduled -> {
+      return;
+    });
 
-    when(SlotBooked.class, booked -> repository.hideSlot(booked.getSlotId()));
+    when(SlotBooked.class, booked -> {
+      return;
+    });
 
-    when(SlotBookingCancelled.class, cancelled -> repository.showSlot(cancelled.getSlotId()));
-    when(SlotScheduleCancelled.class, cancelled -> repository.deleteSlot(cancelled.getSlotId()));
+    when(SlotBookingCancelled.class, cancelled -> {
+      return;
+    });
+
+    when(SlotScheduleCancelled.class, cancelled -> {
+      return;
+    });
   }
 }
