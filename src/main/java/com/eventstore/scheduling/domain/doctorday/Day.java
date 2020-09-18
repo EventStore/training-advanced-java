@@ -126,17 +126,6 @@ public class Day extends AggregateRootSnapshot {
         raise(new SlotBookingCancelled(dayId, slotId, reason));
     }
 
-    @SneakyThrows
-    public void archive() {
-        isNotScheduled();
-
-        if (isArchived) {
-            throw new DayScheduleAlreadyArchived();
-        }
-
-        raise(new DayScheduleArchived(dayId));
-    }
-
     public void cancel() {
         isCancelledOrArchived();
         isNotScheduled();

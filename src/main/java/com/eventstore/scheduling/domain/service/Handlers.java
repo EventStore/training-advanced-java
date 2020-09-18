@@ -43,12 +43,5 @@ public class Handlers extends CommandHandler {
             aggregate.cancel();
             dayRepository.save(aggregate, metadata);
         });
-        register(ArchiveDaySchedule.class, tuple -> {
-            val command = tuple._1;
-            val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.archive();
-            dayRepository.save(aggregate, metadata);
-        });
     }
 }
