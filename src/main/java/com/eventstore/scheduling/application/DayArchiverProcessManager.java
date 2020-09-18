@@ -61,15 +61,20 @@ public class DayArchiverProcessManager extends EventHandler {
     @SneakyThrows
     private void archiveAndPurge(DayId dayId) {
         DoctorDayId aggregateId = new DoctorDayId(dayId);
-        List<Object> events =
-                eventStoreClient.loadEvents(aggregateId.toString(), None());
-        events
-                .reverse()
-                .headOption()
-                .forEach(
-                        (lastEvent) -> {
-                            coldStorage.saveAll(aggregateId.toString(), events);
-                            eventStoreClient.truncateStream(aggregateId.toString(), eventStoreClient.getLastVersion(aggregateId.toString()));
-                        });
+
+        eventStoreClient.getLastVersion(aggregateId.toString()).map(lastVersion -> {
+            List<Object> events =
+                    eventStoreClient.loadEvents(aggregateId.toString(), None());
+            events
+                    .reverse()
+                    .headOption()
+                    .forEach(
+                            (lastEvent) -> {
+                                coldStorage.saveAll(aggregateId.toString(), events);
+                                eventStoreClient.truncateStream(aggregateId.toString(), lastVersion);
+                            });
+
+            return null;
+        });
     }
 }

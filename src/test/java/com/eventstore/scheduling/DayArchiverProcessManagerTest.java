@@ -64,13 +64,16 @@ public class DayArchiverProcessManagerTest extends HandlerTest
     @SneakyThrows
     @Test
     void shouldSendArchiveCommandForAllSlotsCompleted180DaysAgo() {
-        eventStoreClient.truncateStream("async-command-handler", eventStoreClient.getLastVersion("async-command-handler") + 1);
+        eventStoreClient.getLastVersion("async-command-handler").map(lastVersion -> {
+                    eventStoreClient.truncateStream("async-command-handler", lastVersion + 1);
+                    return null;
+                }
+        );
         val date = LocalDate.now().minusDays(180);
         val dayScheduled = new DayScheduled(dayId, doctorId, date);
         val calendarDayStarted = new CalendarDayStarted(LocalDate.now());
 
         given(List.of(dayScheduled, calendarDayStarted));
-        Thread.sleep(100);
         then(eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::getCommand),
                 List.of(new ArchiveDaySchedule(dayId)));
     }

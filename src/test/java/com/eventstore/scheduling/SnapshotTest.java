@@ -5,7 +5,10 @@ import com.eventstore.scheduling.domain.doctorday.DayId;
 import com.eventstore.scheduling.domain.doctorday.DaySnapshot;
 import com.eventstore.scheduling.domain.doctorday.command.ScheduleSlot;
 import com.eventstore.scheduling.domain.service.RandomIdGenerator;
-import com.eventstore.scheduling.eventsourcing.*;
+import com.eventstore.scheduling.eventsourcing.CausationId;
+import com.eventstore.scheduling.eventsourcing.CommandMetadata;
+import com.eventstore.scheduling.eventsourcing.CorrelationId;
+import com.eventstore.scheduling.eventsourcing.EventStore;
 import com.eventstore.scheduling.infrastructure.eventstore.EsAggregateStore;
 import com.eventstore.scheduling.infrastructure.eventstore.EsEventStore;
 import com.eventstore.scheduling.test.TestEventStoreConnection;
@@ -41,9 +44,9 @@ public class SnapshotTest implements TestEventStoreConnection {
                 aggregate.slots.getSlots(), aggregate.isArchived, aggregate.isCancelled, aggregate.isScheduled, dayId, today
         );
 
-        Thread.sleep(200);
         assertEquals(snapshot, eventStoreClient.loadSnapshot("doctorday-" + dayId.getValue()).getSnapshot());
     }
+
     @SneakyThrows
     @Test
     void shouldReadSnapshotWhenLoading() {
@@ -59,8 +62,11 @@ public class SnapshotTest implements TestEventStoreConnection {
 
         esAggregateStore.save(aggregate, metadata);
 
-        Thread.sleep(200);
-        eventStoreClient.truncateStream("doctorday-" + anotherDayId.getValue(), eventStoreClient.getLastVersion("doctorday-" +anotherDayId.getValue()) + 1);
+        eventStoreClient.getLastVersion("doctorday-" + anotherDayId.getValue()).map(lastVersion -> {
+                    eventStoreClient.truncateStream("doctorday-" + anotherDayId.getValue(), lastVersion + 1L);
+                    return null;
+                }
+        );
         val reloadedAggregate = esAggregateStore.load(new Day(), anotherDayId.getValue());
 
         assertEquals(reloadedAggregate.getVersion(), 5L);

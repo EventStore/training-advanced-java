@@ -30,11 +30,12 @@ public class EsEventStore implements EventStore {
         return "[" + tenantPrefix + "]" + streamId;
     }
 
+    @SneakyThrows
     @Override
     public void appendCommand(String streamId, Object command, CommandMetadata metadata) {
         val proposedCommand = serde.serializeCommand(command, metadata);
 
-        client.appendToStream(getPrefixedStreamId(streamId), SpecialStreamRevision.ANY, List.of(proposedCommand).asJava());
+        client.appendToStream(getPrefixedStreamId(streamId), SpecialStreamRevision.ANY, List.of(proposedCommand).asJava()).get();
     }
 
     @Override
@@ -82,19 +83,20 @@ public class EsEventStore implements EventStore {
     }
 
     @Override
-    public Long getLastVersion(String streamId) {
+    public Option<Long> getLastVersion(String streamId) {
         return
                 Try.of(() -> client
                         .readStream(Direction.Backward, getPrefixedStreamId(streamId), StreamRevision.END, 1, false)
-                        .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).head().getEvent().getStreamRevision().getValueUnsigned();
+                        .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(event -> event.getEvent().getStreamRevision().getValueUnsigned());
     }
 
+    @SneakyThrows
     @Override
     public void appendSnapshot(String streamId, Long version, Object snapshot) {
 
         val proposed = serde.serializeSnapshot(snapshot, version);
 
-        client.appendToStream(getPrefixedStreamId("snapshot-" + streamId), SpecialStreamRevision.ANY, List.of(proposed).asJava());
+        client.appendToStream(getPrefixedStreamId("snapshot-" + streamId), SpecialStreamRevision.ANY, List.of(proposed).asJava()).get();
     }
 
     @Override

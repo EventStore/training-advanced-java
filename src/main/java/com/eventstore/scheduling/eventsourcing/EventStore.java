@@ -11,7 +11,7 @@ public interface EventStore {
     void appendEvents(String streamId, CommandMetadata metadata, List<Object> events);
     List<Object> loadEvents(String streamId, Option<Long> version);
 
-    Long getLastVersion(String streamId);
+    Option<Long> getLastVersion(String streamId);
 
     void appendSnapshot(String streamId, Long version, Object snapshot);
     SnapshotEnvelope loadSnapshot(String streamId);

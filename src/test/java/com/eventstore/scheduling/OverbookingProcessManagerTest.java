@@ -73,7 +73,11 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
     @SneakyThrows
     @Test
     void shouldSendCommandToCancelSlotIfBookingLimitWasReached() {
-        eventStoreClient.truncateStream("async-command-handler", eventStoreClient.getLastVersion("async-command-handler") + 1);
+        eventStoreClient.getLastVersion("async-command-handler").map(lastVersion -> {
+                    eventStoreClient.truncateStream("async-command-handler", lastVersion + 1);
+                    return null;
+                }
+        );
 
         val patientId = new PatientId("John Doe");
         val slotScheduled1 =
@@ -103,7 +107,6 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
                         slotBooked3,
                         slotBooked4
                 ));
-        Thread.sleep(100);
         then(repository.countByPatientAndMonth(patientId, today.getMonth()), 4);
         then(
                 eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::getCommand),
