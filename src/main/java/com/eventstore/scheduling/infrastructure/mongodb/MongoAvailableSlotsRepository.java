@@ -65,7 +65,7 @@ public class MongoAvailableSlotsRepository implements AvailableSlotsRepository {
     collection.findOneAndUpdate(eq("data.slotId", slotId.getValue()), set("hidden", hidden));
   }
 
-  @EqualsAndHashCode
+  @EqualsAndHashCode(callSuper=false)
   @ToString
   @AllArgsConstructor
   @Getter

@@ -1,8 +1,6 @@
 package com.eventstore.scheduling;
 
-import com.eventstore.dbclient.EventStoreConnection;
-import com.eventstore.dbclient.StreamsClient;
-import com.eventstore.dbclient.UserCredentials;
+import com.eventstore.dbclient.*;
 import com.eventstore.scheduling.application.AvailableSlotsProjection;
 import com.eventstore.scheduling.application.DayArchiverProcessManager;
 import com.eventstore.scheduling.application.OverbookingProcessManager;
@@ -62,12 +60,8 @@ public class AppConfig {
 
     public AppConfig() {
 
-        StreamsClient client = EventStoreConnection
-                .builder()
-                .insecure()
-                .defaultUserCredentials(new UserCredentials("admin", "changeit"))
-                .createSingleNodeConnection("localhost", 2113)
-                .newStreamsClient();
+        ClientSettings setts = ConnectionString.parseOrThrow("esdb://admin:changeit@localhost:2113?tlsVerifyCert=false&tls=false");
+        Streams client = Client.create(setts).streams();
 
         String tenantPrefix = "prod";
 

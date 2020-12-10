@@ -2,7 +2,7 @@ package com.eventstore.scheduling.infrastructure.eventstore;
 
 import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.dbclient.StreamRevision;
-import com.eventstore.dbclient.StreamsClient;
+import com.eventstore.dbclient.Streams;
 import com.eventstore.dbclient.SubscriptionListener;
 import com.eventstore.scheduling.eventsourcing.CommandMetadata;
 import com.eventstore.scheduling.eventsourcing.CommandStore;
@@ -14,14 +14,14 @@ import lombok.val;
 public class EsCommandStore implements CommandStore {
 
     private final EventStore eventStore;
-    private final StreamsClient streamsClient;
+    private final Streams streamsClient;
     private final Dispatcher dispatcher;
     private final String tenantPrefix;
     private final EsCommandSerde commandSerde;
 
     private final String streamName = "async-command-handler";
 
-    public EsCommandStore(EventStore eventStore, StreamsClient streamsClient, Dispatcher dispatcher, String tenantPrefix, EsCommandSerde commandSerde) {
+    public EsCommandStore(EventStore eventStore, Streams streamsClient, Dispatcher dispatcher, String tenantPrefix, EsCommandSerde commandSerde) {
         this.eventStore = eventStore;
         this.streamsClient = streamsClient;
         this.dispatcher = dispatcher;
@@ -37,7 +37,7 @@ public class EsCommandStore implements CommandStore {
     @SneakyThrows
     @Override
     public void start() {
-        streamsClient.subscribeToStream("[" + tenantPrefix + "]" + streamName, StreamRevision.END, false, new Listener()).get();
+        streamsClient.subscribeToStream("[" + tenantPrefix + "]" + streamName, new Listener()).fromEnd().notResolveLinks().execute().get();
     }
 
     private void eventAppeared(ResolvedEvent event) {

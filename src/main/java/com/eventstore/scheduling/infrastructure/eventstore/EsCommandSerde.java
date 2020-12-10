@@ -1,6 +1,6 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
-import com.eventstore.dbclient.ProposedEvent;
+import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.RecordedEvent;
 import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.scheduling.domain.doctorday.DayId;
@@ -32,7 +32,7 @@ import static io.vavr.Predicates.is;
 public class EsCommandSerde {
     ObjectMapper objectMapper = new ObjectMapper();
 
-    public ProposedEvent serialize(Object data, CommandMetadata metadata) {
+    public EventData serialize(Object data, CommandMetadata metadata) {
         val metadataNode = objectMapper.createObjectNode();
         metadataNode.put("correlationId", metadata.getCorrelationId().getValue());
         metadataNode.put("causationId", metadata.getCausationId().getValue());
@@ -76,9 +76,9 @@ public class EsCommandSerde {
     }
 
     @SneakyThrows
-    private ProposedEvent toProposedEvent(
+    private EventData toProposedEvent(
             String eventType, ObjectNode data, ObjectNode metadata) {
-        return new ProposedEvent(
+        return new EventData(
                 UUID.randomUUID(),
                 eventType,
                 "application/json",
