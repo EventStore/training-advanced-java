@@ -23,7 +23,7 @@ import static com.eventstore.scheduling.test.TestFixtures.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SnapshotTest implements TestEventStoreConnection {
-    private final EventStore eventStoreClient = new EsEventStore(streamsClient, "test");
+    private final EventStore eventStoreClient = new EsEventStore(client, "test");
     EsAggregateStore esAggregateStore = new EsAggregateStore(eventStoreClient, 5);
 
     @SneakyThrows

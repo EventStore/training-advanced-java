@@ -1,6 +1,6 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
-import com.eventstore.dbclient.ProposedEvent;
+import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.RecordedEvent;
 import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.scheduling.domain.doctorday.DayId;
@@ -24,7 +24,7 @@ public class EsSnapshotSerde {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
-    public ProposedEvent serialize(Object data, Long version) {
+    public EventData serialize(Object data, Long version) {
         val metadataNode = objectMapper.createObjectNode();
         metadataNode.put("version", version);
 
@@ -50,7 +50,7 @@ public class EsSnapshotSerde {
                             slotsNode.add(slotNode);
                         });
         node.set("slots", slotsNode);
-        return new ProposedEvent(
+        return new EventData(
                 UUID.randomUUID(),
                 eventType,
                 "application/json",
