@@ -50,7 +50,7 @@ public class MongoArchivableDaysRepository implements ArchivableDaysRepository {
         .map(DayId::new);
   }
 
-  @EqualsAndHashCode
+  @EqualsAndHashCode(callSuper=false)
   @ToString
   @AllArgsConstructor
   @Getter
