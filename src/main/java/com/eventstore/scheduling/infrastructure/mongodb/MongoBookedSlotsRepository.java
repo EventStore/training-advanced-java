@@ -91,7 +91,7 @@ public class MongoBookedSlotsRepository implements BookedSlotsRepository {
         .get();
   }
 
-  @EqualsAndHashCode
+  @EqualsAndHashCode(callSuper=false)
   @ToString
   @AllArgsConstructor
   @Getter
@@ -104,7 +104,7 @@ public class MongoBookedSlotsRepository implements BookedSlotsRepository {
     private int monthNumber;
   }
 
-  @EqualsAndHashCode
+  @EqualsAndHashCode(callSuper=false)
   @ToString
   @AllArgsConstructor
   @Getter
