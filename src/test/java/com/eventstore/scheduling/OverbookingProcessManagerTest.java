@@ -28,8 +28,8 @@ import static com.eventstore.scheduling.test.TestFixtures.*;
 
 public class OverbookingProcessManagerTest extends HandlerTest implements TestEventStoreConnection, TestMongoConnection {
     private final BookedSlotsRepository repository = new MongoBookedSlotsRepository(getMongo());
-    private final EventStore eventStoreClient = new EsEventStore(streamsClient, "test");
-    private final CommandStore commandStore = new EsCommandStore(eventStoreClient, streamsClient, null, "test", new EsCommandSerde());
+    private final EventStore eventStoreClient = new EsEventStore(client, "test");
+    private final CommandStore commandStore = new EsCommandStore(eventStoreClient, client, null, "test", new EsCommandSerde());
 
     @Override
     protected EventHandler handler() {

@@ -1,6 +1,6 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
-import com.eventstore.dbclient.ProposedEvent;
+import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.scheduling.eventsourcing.CommandEnvelope;
 import com.eventstore.scheduling.eventsourcing.CommandMetadata;
@@ -11,7 +11,7 @@ public class EventStoreSerde {
     private EsEventSerde eventSerde = new EsEventSerde();
     private EsCommandSerde commandSerde = new EsCommandSerde();
     private EsSnapshotSerde snapshotSerde = new EsSnapshotSerde();
-    public ProposedEvent serializeCommand(Object command, CommandMetadata metadata) {
+    public EventData serializeCommand(Object command, CommandMetadata metadata) {
         return commandSerde.serialize(command, metadata);
     }
 
@@ -20,7 +20,7 @@ public class EventStoreSerde {
         return new CommandEnvelope(result._1, result._2);
     }
 
-    public ProposedEvent serializeEvent(Object event, CommandMetadata metadata) {
+    public EventData serializeEvent(Object event, CommandMetadata metadata) {
         return eventSerde.serialize(event, metadata).get();
     }
 
@@ -28,7 +28,7 @@ public class EventStoreSerde {
         return eventSerde.deserialize(resolvedEvent)._1;
     }
 
-    public ProposedEvent serializeSnapshot(Object snapshot, Long version) {
+    public EventData serializeSnapshot(Object snapshot, Long version) {
         return snapshotSerde.serialize(snapshot, version);
     }
 

@@ -13,15 +13,12 @@ import lombok.val;
 
 import java.util.UUID;
 
-import static com.eventstore.dbclient.Direction.Backward;
-import static com.eventstore.dbclient.Direction.Forward;
-
 public class EsEventStore implements EventStore {
-    private final StreamsClient client;
+    private final Streams client;
     private final EventStoreSerde serde = new EventStoreSerde();
     private final String tenantPrefix;
 
-    public EsEventStore(StreamsClient client, String tenantPrefix) {
+    public EsEventStore(Streams client, String tenantPrefix) {
         this.client = client;
         this.tenantPrefix = tenantPrefix;
     }
@@ -30,20 +27,22 @@ public class EsEventStore implements EventStore {
         return "[" + tenantPrefix + "]" + streamId;
     }
 
+    @SneakyThrows
     @Override
     public void appendCommand(String streamId, Object command, CommandMetadata metadata) {
         val proposedCommand = serde.serializeCommand(command, metadata);
 
-        client.appendToStream(getPrefixedStreamId(streamId), SpecialStreamRevision.ANY, List.of(proposedCommand).asJava());
+        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvent(proposedCommand).execute().get();
     }
 
     @Override
     public List<CommandEnvelope> loadCommands(String streamId) {
         val future =
-                client.readStream(
-                        Forward,
-                        getPrefixedStreamId(streamId),
-                        StreamRevision.START, 4096, false);
+                client.readStream(getPrefixedStreamId(streamId))
+                        .forward()
+                        .fromRevision(StreamRevision.START.getValueUnsigned())
+                        .notResolveLinks()
+                        .execute(4096);
 
         try {
             return List.ofAll(future.get().getEvents()).map(serde::deserializeCommand);
@@ -55,27 +54,26 @@ public class EsEventStore implements EventStore {
     @SneakyThrows
     @Override
     public void appendEvents(String streamId, Long version, CommandMetadata metadata, List<Object> events) {
-        val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).asJava();
+        val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).iterator();
         if (version == -1L) {
-            client.appendToStream(getPrefixedStreamId(streamId), SpecialStreamRevision.NO_STREAM, serialized).get();
+            client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.NO_STREAM).addEvents(serialized).execute().get();
         } else {
-            client.appendToStream(getPrefixedStreamId(streamId), ExpectedRevision.expectedRevision(version), serialized).get();
+            client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.expectedRevision(version)).addEvents(serialized).execute().get();
         }
     }
 
     @SneakyThrows
     @Override
     public void appendEvents(String streamId, CommandMetadata metadata, List<Object> events) {
-        List<ProposedEvent> serialized = events.map((event) -> serde.serializeEvent(event, metadata));
-        client.appendToStream(
-                getPrefixedStreamId(streamId), SpecialStreamRevision.NO_STREAM, serialized.asJava()).get();
+        val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).iterator();
+        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.NO_STREAM).addEvents(serialized).execute().get();
     }
 
     @Override
     public List<Object> loadEvents(String streamId, Option<Long> version) {
         val result =
                 Try.of(() -> client
-                        .readStream(Direction.Forward, getPrefixedStreamId(streamId), version.map(StreamRevision::new).getOrElse(StreamRevision.START), 4096, false)
+                        .readStream(getPrefixedStreamId(streamId)).forward().fromRevision(version.map(StreamRevision::new).getOrElse(StreamRevision.START).getValueUnsigned()).notResolveLinks().execute(4096)
                         .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
 
         return result.map(serde::deserializeEvent);
@@ -85,22 +83,23 @@ public class EsEventStore implements EventStore {
     public Long getLastVersion(String streamId) {
         return
                 Try.of(() -> client
-                        .readStream(Direction.Backward, getPrefixedStreamId(streamId), StreamRevision.END, 1, false)
+                        .readStream(getPrefixedStreamId(streamId)).backward().fromRevision(StreamRevision.END.getValueUnsigned()).notResolveLinks().execute(1)
                         .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).head().getEvent().getStreamRevision().getValueUnsigned();
     }
 
+    @SneakyThrows
     @Override
     public void appendSnapshot(String streamId, Long version, Object snapshot) {
 
         val proposed = serde.serializeSnapshot(snapshot, version);
 
-        client.appendToStream(getPrefixedStreamId("snapshot-" + streamId), SpecialStreamRevision.ANY, List.of(proposed).asJava());
+        client.appendStream(getPrefixedStreamId("snapshot-" + streamId)).expectedRevision(ExpectedRevision.ANY).addEvent(proposed).execute().get();
     }
 
     @Override
     public SnapshotEnvelope loadSnapshot(String streamId) {
         List<ResolvedEvent> results = Try.of(() -> client
-                .readStream(Backward, getPrefixedStreamId("snapshot-" + streamId), StreamRevision.END, 1, false)
+                .readStream(getPrefixedStreamId("snapshot-" + streamId)).backward().fromRevision(StreamRevision.END.getValueUnsigned()).notResolveLinks().execute(1)
                 .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
 
         if (results.isEmpty()) {
@@ -114,17 +113,17 @@ public class EsEventStore implements EventStore {
     @Override
     public void truncateStream(String streamId, Long version) {
         client
-                .appendToStream(
-                        "$$" + getPrefixedStreamId(streamId),
-                        SpecialStreamRevision.ANY,
+                .appendStream(
+                        "$$" + getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvents(
                         List.of(
-                                new ProposedEvent(
+                                new EventData(
                                         UUID.randomUUID(),
                                         "$metadata",
                                         "application/json",
                                         ("{\"$tb\":" + version + "}").getBytes(),
                                         "{}".getBytes()))
-                                .asJava())
+                                .iterator())
+                .execute()
                 .get();
     }
 }
