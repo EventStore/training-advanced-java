@@ -15,10 +15,10 @@ import static com.eventstore.dbclient.Direction.Forward;
 
 public class EsCheckpointStore implements CheckpointStore {
   private final ObjectMapper objectMapper = new ObjectMapper();
-  private final StreamsClient client;
+  private final Streams client;
   private final String subscriptionName;
 
-  public EsCheckpointStore(StreamsClient client, String subscriptionName) {
+  public EsCheckpointStore(Streams client, String subscriptionName) {
     this.client = client;
     this.subscriptionName = "checkpoint-" + subscriptionName;
   }
@@ -26,7 +26,7 @@ public class EsCheckpointStore implements CheckpointStore {
   @Override
   public Option<Checkpoint> getCheckpoint() {
     return Try.of(() -> client
-            .readStream(Forward, subscriptionName, StreamRevision.END, 1, false)
+            .readStream(subscriptionName).fromRevision(StreamRevision.END.getValueUnsigned()).backward().execute(1)
             .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(this::deserialize);
   }
 
@@ -37,18 +37,19 @@ public class EsCheckpointStore implements CheckpointStore {
     return new Checkpoint(data.get("checkpoint").asLong());
   }
 
+  @SneakyThrows
   @Override
   public void storeCheckpoint(Checkpoint checkpoint) {
-    ProposedEvent proposed  = serialize(checkpoint);
+    EventData proposed  = serialize(checkpoint);
 
-    client.appendToStream(subscriptionName, SpecialStreamRevision.ANY, List.of(proposed).asJava());
+    client.appendStream(subscriptionName).expectedRevision(ExpectedRevision.ANY).addEvent(proposed).execute().get();
   }
 
   @SneakyThrows
-  private ProposedEvent serialize(Checkpoint checkpoint) {
+  private EventData serialize(Checkpoint checkpoint) {
     val node = objectMapper.createObjectNode();
     node.put("checkpoint", checkpoint.getValue());
-    return new ProposedEvent(
+    return new EventData(
             UUID.randomUUID(),
             "$checkpoint",
             "application/json",

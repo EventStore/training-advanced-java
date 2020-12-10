@@ -32,8 +32,7 @@ public class EsAggregateStore implements AggregateStore {
 
   @Override
   public <T extends AggregateRoot> T load(T aggregate, String aggregateId) {
-
-    var version = -1L;
+      long version = -1L;
     if (aggregate instanceof AggregateRootSnapshot) {
       version = loadSnapshot((AggregateRootSnapshot) aggregate, aggregateId, version);
     }
