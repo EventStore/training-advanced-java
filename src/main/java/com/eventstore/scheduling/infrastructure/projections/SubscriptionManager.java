@@ -11,12 +11,12 @@ public class SubscriptionManager {
     private final CheckpointStore checkpointStore;
     private final String name;
     private final String streamName;
-    private final StreamsClient client;
+    private final Streams client;
     private final List<Subscription> subscriptions;
     private final Boolean isAllStream;
     private final EsEventSerde serde = new EsEventSerde();
 
-    public SubscriptionManager(CheckpointStore checkpointStore, String name, String streamName, StreamsClient client, List<Subscription> subscriptions) {
+    public SubscriptionManager(CheckpointStore checkpointStore, String name, String streamName, Streams  client, List<Subscription> subscriptions) {
         this.checkpointStore = checkpointStore;
         this.name = name;
         this.streamName = streamName;
@@ -30,9 +30,9 @@ public class SubscriptionManager {
         val checkpoint = checkpointStore.getCheckpoint().map(c -> new StreamRevision(c.getValue())).getOrElse(StreamRevision.START);
 
         if (isAllStream) {
-            client.subscribeToAll(new Position(checkpoint.getValueUnsigned(), checkpoint.getValueUnsigned()), false, new Listener()).get();
+            client.subscribeToAll(new Listener()).fromPosition(new Position(checkpoint.getValueUnsigned(), checkpoint.getValueUnsigned())).notResolveLinks().execute().get();
         } else {
-            client.subscribeToStream(streamName, checkpoint, true, new Listener()).get();
+            client.subscribeToStream(streamName, new Listener()).fromRevision(checkpoint.getValueUnsigned()).resolveLinks().execute().get();
         }
     }
 
