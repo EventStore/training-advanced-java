@@ -1,6 +1,9 @@
 package com.eventstore.scheduling.infrastructure.projections;
 
 
+import com.eventstore.scheduling.eventsourcing.CommandMetadata;
+import io.vavr.Tuple2;
+
 public class DbProjector implements Subscription {
     private final EventHandler projection;
 
@@ -9,9 +12,9 @@ public class DbProjector implements Subscription {
     }
 
     @Override
-    public void project(Object event) {
-        if (projection.canHandle(event)) {
-            projection.handle(event);
+    public void project(Tuple2<Object, CommandMetadata> tuple) {
+        if (projection.canHandle(tuple)) {
+            projection.handle(tuple);
         }
     }
 }

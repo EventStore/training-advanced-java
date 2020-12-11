@@ -1,13 +1,15 @@
 package com.eventstore.scheduling.infrastructure.projections;
 
+import com.eventstore.scheduling.eventsourcing.CommandMetadata;
+import io.vavr.Tuple2;
 import lombok.Data;
 
 import java.util.function.Consumer;
 
 @Data
-public class EventHandlerEnvelope {
-    private final Class type;
+public class EventHandlerEnvelope<T> {
+    private final Class<T> type;
 
-    private final Consumer<Object> handler;
+    private final Consumer<Tuple2<T, CommandMetadata>> handler;
 }
 
