@@ -25,25 +25,25 @@ public class OverbookingProcessManager extends EventHandler {
 
     when(SlotScheduled.class, slotScheduled -> repository.addSlot(
             new Slot(
-                    slotScheduled.getSlotId(),
-                    slotScheduled.getDayId(),
-                    slotScheduled.getStartDateTime().getMonth())));
+                    slotScheduled._1.getSlotId(),
+                    slotScheduled._1.getDayId(),
+                    slotScheduled._1.getStartDateTime().getMonth())));
 
     when(SlotBooked.class, slotBooked -> {
-      repository.markSlotAsBooked(slotBooked.getSlotId(), slotBooked.getPatientId());
+      repository.markSlotAsBooked(slotBooked._1.getSlotId(), slotBooked._1.getPatientId());
 
-      val slot = repository.getSlot(slotBooked.getSlotId());
-      val count = repository.countByPatientAndMonth(slotBooked.getPatientId(), slot.getMonth());
+      val slot = repository.getSlot(slotBooked._1.getSlotId());
+      val count = repository.countByPatientAndMonth(slotBooked._1.getPatientId(), slot.getMonth());
 
       if (count > bookingLimitPerPatient) {
         commandStore.send(
                 new CancelSlotBooking(slot.getDayId(), slot.getSlotId(), "Overbooking"),
                 new CommandMetadata(
-                        CorrelationId.create(idGenerator),
+                        slotBooked._2.getCorrelationId(),
                         CausationId.create(idGenerator)));
       }
     });
 
-    when(SlotBookingCancelled.class, slotBookedCancelled -> repository.markSlotAsAvailable(slotBookedCancelled.getSlotId()));
+    when(SlotBookingCancelled.class, slotBookedCancelled -> repository.markSlotAsAvailable(slotBookedCancelled._1.getSlotId()));
   }
 }
