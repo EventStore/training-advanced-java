@@ -28,8 +28,8 @@ public class EventStoreSerde {
         return eventSerde.deserialize(resolvedEvent)._1;
     }
 
-    public EventData serializeSnapshot(Object snapshot, Long version) {
-        return snapshotSerde.serialize(snapshot, version);
+    public EventData serializeSnapshot(Object snapshot, Long version, CommandMetadata metadata) {
+        return snapshotSerde.serialize(snapshot, version, metadata);
     }
 
     public SnapshotEnvelope deserializeSnapshot(ResolvedEvent result) {
