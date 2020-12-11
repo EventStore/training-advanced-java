@@ -66,7 +66,7 @@ public class EsEventStore implements EventStore {
     @Override
     public void appendEvents(String streamId, CommandMetadata metadata, List<Object> events) {
         val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).iterator();
-        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.NO_STREAM).addEvents(serialized).execute().get();
+        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvents(serialized).execute().get();
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EsEventStore implements EventStore {
 
     @SneakyThrows
     @Override
-    public void appendSnapshot(String streamId, Long version, Object snapshot) {
+    public void appendSnapshot(String streamId, Long version, Object snapshot, CommandMetadata metadata) {
         // Serialize the snapshot
         // Get snapshot stream name
         // Append snapshot to stream

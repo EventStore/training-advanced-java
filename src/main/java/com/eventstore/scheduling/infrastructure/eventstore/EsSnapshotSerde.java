@@ -24,9 +24,11 @@ public class EsSnapshotSerde {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
-    public EventData serialize(Object data, Long version) {
+    public EventData serialize(Object data, Long version, CommandMetadata metadata) {
         val metadataNode = objectMapper.createObjectNode();
         metadataNode.put("version", version);
+        metadataNode.put("correlationId", metadata.getCorrelationId().getValue());
+        metadataNode.put("causationId", metadata.getCausationId().getValue());
 
         val node = objectMapper.createObjectNode();
 

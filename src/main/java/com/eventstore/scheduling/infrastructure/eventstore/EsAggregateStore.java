@@ -25,7 +25,12 @@ public class EsAggregateStore implements AggregateStore {
     if (aggregate instanceof AggregateRootSnapshot) {
       val snapshotAggregate = (AggregateRootSnapshot) aggregate;
       if((snapshotAggregate.getVersion() + changes.length() + 1) - snapshotAggregate.getSnapshotVersion() >= snapshotThreshold) {
-        eventStore.appendSnapshot("doctorday-" + aggregate.getId(), aggregate.getVersion() + changes.length(), snapshotAggregate.getSnapshot());
+        eventStore.appendSnapshot(
+                "doctorday-" + aggregate.getId(),
+                aggregate.getVersion() + changes.length(),
+                snapshotAggregate.getSnapshot(),
+                metadata
+        );
       }
     }
   }
