@@ -25,9 +25,7 @@ public class OverbookingProcessManager extends EventHandler {
 
     when(SlotScheduled.class, slotScheduled -> {});
 
-    when(SlotBooked.class, slotBooked -> {
-
-    });
+    when(SlotBooked.class, slotBooked -> {});
 
     when(SlotBookingCancelled.class, slotBookedCancelled -> {});
   }
