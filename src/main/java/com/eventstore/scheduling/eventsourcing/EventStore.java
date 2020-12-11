@@ -13,7 +13,7 @@ public interface EventStore {
 
     Option<Long> getLastVersion(String streamId);
 
-    void appendSnapshot(String streamId, Long version, Object snapshot);
+    void appendSnapshot(String streamId, Long version, Object snapshot, CommandMetadata metadata);
     SnapshotEnvelope loadSnapshot(String streamId);
 
     void truncateStream(String streamId, Long version);

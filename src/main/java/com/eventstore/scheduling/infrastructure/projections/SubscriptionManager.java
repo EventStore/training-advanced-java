@@ -39,7 +39,7 @@ public class SubscriptionManager {
     private void eventAppeared(ResolvedEvent event) {
         if (event.getEvent().getEventType().startsWith("doctorday")) {
             val deserialized = serde.deserialize(event);
-            subscriptions.forEach(s -> s.project(deserialized._1));
+            subscriptions.forEach(s -> s.project(deserialized));
 
             Checkpoint checkpoint;
 
