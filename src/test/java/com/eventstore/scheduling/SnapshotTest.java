@@ -69,6 +69,6 @@ public class SnapshotTest implements TestEventStoreConnection {
         );
         val reloadedAggregate = esAggregateStore.load(new Day(), anotherDayId.getValue());
 
-        assertEquals(reloadedAggregate.getVersion(), 5L);
+        assertEquals(5L, reloadedAggregate.getVersion());
     }
 }
