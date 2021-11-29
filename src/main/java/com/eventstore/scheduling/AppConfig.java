@@ -59,8 +59,8 @@ public class AppConfig {
 
     public AppConfig() {
 
-        ClientSettings setts = ConnectionString.parseOrThrow("esdb://admin:changeit@localhost:2113?tlsVerifyCert=false&tls=false");
-        Streams client = Client.create(setts).streams();
+        EventStoreDBClientSettings setts = EventStoreDBConnectionString.parseOrThrow("esdb://admin:changeit@localhost:2113?tlsVerifyCert=false&tls=false");
+        EventStoreDBClient client = EventStoreDBClient.create(setts);
 
         String tenantPrefix = "prod";
 
