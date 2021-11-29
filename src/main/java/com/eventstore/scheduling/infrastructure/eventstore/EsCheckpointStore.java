@@ -11,23 +11,25 @@ import lombok.val;
 
 import java.util.UUID;
 
-import static com.eventstore.dbclient.Direction.Forward;
-
 public class EsCheckpointStore implements CheckpointStore {
   private final ObjectMapper objectMapper = new ObjectMapper();
-  private final Streams client;
+  private final EventStoreDBClient client;
   private final String subscriptionName;
 
-  public EsCheckpointStore(Streams client, String subscriptionName) {
+  public EsCheckpointStore(EventStoreDBClient client, String subscriptionName) {
     this.client = client;
     this.subscriptionName = "checkpoint-" + subscriptionName;
   }
 
   @Override
   public Option<Checkpoint> getCheckpoint() {
+    ReadStreamOptions options = ReadStreamOptions.get()
+            .fromEnd()
+            .backwards();
+
     return Try.of(() -> client
-            .readStream(subscriptionName).fromRevision(StreamRevision.END.getValueUnsigned()).backward().execute(1)
-            .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(this::deserialize);
+            .readStream(subscriptionName, 1, options).get()
+          ).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(this::deserialize);
   }
 
   @SneakyThrows
@@ -42,7 +44,7 @@ public class EsCheckpointStore implements CheckpointStore {
   public void storeCheckpoint(Checkpoint checkpoint) {
     EventData proposed  = serialize(checkpoint);
 
-    client.appendStream(subscriptionName).expectedRevision(ExpectedRevision.ANY).addEvent(proposed).execute().get();
+    client.appendToStream(subscriptionName, proposed).get();
   }
 
   @SneakyThrows
