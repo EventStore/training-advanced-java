@@ -14,11 +14,11 @@ import lombok.val;
 import java.util.UUID;
 
 public class EsEventStore implements EventStore {
-    private final Streams client;
+    private final EventStoreDBClient client;
     private final EventStoreSerde serde = new EventStoreSerde();
     private final String tenantPrefix;
 
-    public EsEventStore(Streams client, String tenantPrefix) {
+    public EsEventStore(EventStoreDBClient client, String tenantPrefix) {
         this.client = client;
         this.tenantPrefix = tenantPrefix;
     }
@@ -32,17 +32,13 @@ public class EsEventStore implements EventStore {
     public void appendCommand(String streamId, Object command, CommandMetadata metadata) {
         val proposedCommand = serde.serializeCommand(command, metadata);
 
-        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvent(proposedCommand).execute().get();
+        client.appendToStream(getPrefixedStreamId(streamId), proposedCommand).get();
     }
 
     @Override
     public List<CommandEnvelope> loadCommands(String streamId) {
         val future =
-                client.readStream(getPrefixedStreamId(streamId))
-                        .forward()
-                        .fromRevision(StreamRevision.START.getValueUnsigned())
-                        .notResolveLinks()
-                        .execute(4096);
+                client.readStream(getPrefixedStreamId(streamId));
 
         try {
             return List.ofAll(future.get().getEvents()).map(serde::deserializeCommand);
@@ -55,25 +51,29 @@ public class EsEventStore implements EventStore {
     @Override
     public void appendEvents(String streamId, Long version, CommandMetadata metadata, List<Object> events) {
         val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).iterator();
-        if (version == -1L) {
-            client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.NO_STREAM).addEvents(serialized).execute().get();
-        } else {
-            client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.expectedRevision(version)).addEvents(serialized).execute().get();
+
+        AppendToStreamOptions options = AppendToStreamOptions.get()
+                .expectedRevision(version == -1L ? ExpectedRevision.NO_STREAM : ExpectedRevision.expectedRevision(version));
+
+        client.appendToStream(getPrefixedStreamId(streamId), options, serialized).get();
         }
-    }
 
     @SneakyThrows
     @Override
     public void appendEvents(String streamId, CommandMetadata metadata, List<Object> events) {
         val serialized = events.map((event) -> serde.serializeEvent(event, metadata)).iterator();
-        client.appendStream(getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvents(serialized).execute().get();
+
+        client.appendToStream(getPrefixedStreamId(streamId), serialized).get();
     }
 
     @Override
     public List<Object> loadEvents(String streamId, Option<Long> version) {
+        ReadStreamOptions options = ReadStreamOptions.get()
+                .fromRevision(version.map(StreamRevision::new).getOrElse(StreamRevision.START));
+
         val result =
                 Try.of(() -> client
-                        .readStream(getPrefixedStreamId(streamId)).forward().fromRevision(version.map(StreamRevision::new).getOrElse(StreamRevision.START).getValueUnsigned()).notResolveLinks().execute(4096)
+                        .readStream(getPrefixedStreamId(streamId), options)
                         .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
 
         return result.map(serde::deserializeEvent);
@@ -81,10 +81,14 @@ public class EsEventStore implements EventStore {
 
     @Override
     public Option<Long> getLastVersion(String streamId) {
+        ReadStreamOptions options = ReadStreamOptions.get()
+                .fromEnd()
+                .backwards();
+
         return
                 Try.of(() -> client
-                        .readStream(getPrefixedStreamId(streamId)).backward().fromRevision(StreamRevision.END.getValueUnsigned()).notResolveLinks().execute(1)
-                        .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(event -> event.getEvent().getStreamRevision().getValueUnsigned());
+                        .readStream(getPrefixedStreamId(streamId), 1, options).get()
+                ).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty()).headOption().map(event -> event.getEvent().getStreamRevision().getValueUnsigned());
     }
 
     @SneakyThrows
@@ -97,9 +101,14 @@ public class EsEventStore implements EventStore {
 
     @Override
     public SnapshotEnvelope loadSnapshot(String streamId) {
-        List<ResolvedEvent> results = Try.of(() -> client
-                .readStream(getPrefixedStreamId("snapshot-" + streamId)).backward().fromRevision(StreamRevision.END.getValueUnsigned()).notResolveLinks().execute(1)
-                .get()).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
+        ReadStreamOptions options = ReadStreamOptions.get()
+                .fromEnd()
+                .backwards();
+
+        List<ResolvedEvent> results =
+                Try.of(() -> client
+                    .readStream(getPrefixedStreamId("snapshot-" + streamId), 1, options).get()
+                ).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
 
         if (results.isEmpty()) {
             return null;
@@ -112,8 +121,8 @@ public class EsEventStore implements EventStore {
     @Override
     public void truncateStream(String streamId, Long version) {
         client
-                .appendStream(
-                        "$$" + getPrefixedStreamId(streamId)).expectedRevision(ExpectedRevision.ANY).addEvents(
+                .appendToStream(
+                        "$$" + getPrefixedStreamId(streamId),
                         List.of(
                                 new EventData(
                                         UUID.randomUUID(),
@@ -122,7 +131,6 @@ public class EsEventStore implements EventStore {
                                         ("{\"$tb\":" + version + "}").getBytes(),
                                         "{}".getBytes()))
                                 .iterator())
-                .execute()
                 .get();
     }
 }
