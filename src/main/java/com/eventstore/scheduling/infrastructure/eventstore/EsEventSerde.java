@@ -102,7 +102,7 @@ public class EsEventSerde {
     }
 
     @SneakyThrows
-    public Tuple2<Object, CommandMetadata> deserialize(ResolvedEvent resolvedEvent) {
+    public Tuple2<Object, EventMetadata> deserialize(ResolvedEvent resolvedEvent) {
         RecordedEvent event = resolvedEvent.getEvent();
         val data = objectMapper.readTree(event.getEventData());
         val deserialized =
@@ -157,7 +157,7 @@ public class EsEventSerde {
         val metadata = objectMapper.readTree(event.getUserMetadata());
         val correlationId = new CorrelationId(metadata.get("correlationId").asText());
         val causationId = new CausationId(metadata.get("causationId").asText());
-        val eventMetadata = new CommandMetadata(correlationId, causationId);
+        val eventMetadata = new EventMetadata(correlationId, causationId, event.getPosition().getCommitUnsigned(), None());
 
         return new Tuple2(deserialized, eventMetadata);
     }
