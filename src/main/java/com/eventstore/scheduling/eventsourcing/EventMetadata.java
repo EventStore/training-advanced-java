@@ -8,5 +8,6 @@ import lombok.NonNull;
 public class EventMetadata {
   private final @NonNull CorrelationId correlationId;
   private final @NonNull CausationId causationId;
+  private final @NonNull Long position;
   private final @NonNull Option<String> replayed;
 }
