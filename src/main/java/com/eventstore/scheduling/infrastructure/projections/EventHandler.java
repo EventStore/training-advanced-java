@@ -3,6 +3,7 @@ package com.eventstore.scheduling.infrastructure.projections;
 import com.eventstore.scheduling.domain.service.IdGenerator;
 import com.eventstore.scheduling.domain.service.RandomIdGenerator;
 import com.eventstore.scheduling.eventsourcing.CommandMetadata;
+import com.eventstore.scheduling.eventsourcing.EventMetadata;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import lombok.Getter;
@@ -14,11 +15,11 @@ public class EventHandler {
     @Getter
     private List<EventHandlerEnvelope<?>> handlers = List.empty();
 
-    protected <T> void when(Class<T> clazz, Consumer<Tuple2<T, CommandMetadata>> when) {
+    protected <T> void when(Class<T> clazz, Consumer<Tuple2<T, EventMetadata>> when) {
         handlers = handlers.append(new EventHandlerEnvelope<T>(clazz, when));
     }
 
-    public void handle(Tuple2<Object, CommandMetadata> tuple) {
+    public void handle(Tuple2<Object, EventMetadata> tuple) {
         handlers.forEach(handler -> {
             val event = tuple._1;
             if (handler.getType() == event.getClass()) {
@@ -27,7 +28,7 @@ public class EventHandler {
         });
     }
 
-    public boolean canHandle(Tuple2<Object, CommandMetadata> tuple) {
+    public boolean canHandle(Tuple2<Object, EventMetadata> tuple) {
         val event = tuple._1;
         return handlers.exists(handler -> handler.getType() == event.getClass());
     }
