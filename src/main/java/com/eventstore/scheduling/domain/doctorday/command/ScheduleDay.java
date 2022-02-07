@@ -4,18 +4,17 @@ import com.eventstore.scheduling.domain.doctorday.DayId;
 import com.eventstore.scheduling.domain.doctorday.DoctorId;
 import com.eventstore.scheduling.eventsourcing.Command;
 import io.vavr.collection.List;
-import lombok.Data;
 import lombok.NonNull;
 
 import java.time.LocalDate;
 
-@Data
-public class ScheduleDay implements Command {
-  private final @NonNull DoctorId doctorId;
-  private final @NonNull LocalDate date;
-  private final @NonNull List<ScheduleSlot> slots;
-
-  public DayId getDayId() {
-    return new DayId(doctorId, date);
-  }
+public record ScheduleDay(
+    @NonNull DoctorId doctorId,
+    @NonNull LocalDate date,
+    @NonNull List<ScheduleSlot> slots
+) implements Command
+{
+    public DayId dayId() {
+        return new DayId(doctorId, date);
+    }
 }

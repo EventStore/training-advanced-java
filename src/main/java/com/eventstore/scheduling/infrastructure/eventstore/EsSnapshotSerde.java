@@ -27,28 +27,28 @@ public class EsSnapshotSerde {
     public EventData serialize(Object data, Long version, CommandMetadata metadata) {
         val metadataNode = objectMapper.createObjectNode();
         metadataNode.put("version", version);
-        metadataNode.put("correlationId", metadata.getCorrelationId().getValue());
-        metadataNode.put("causationId", metadata.getCausationId().getValue());
+        metadataNode.put("correlationId", metadata.correlationId().value());
+        metadataNode.put("causationId", metadata.causationId().value());
 
         val node = objectMapper.createObjectNode();
 
         val snapshot = (DaySnapshot) data;
 
-        node.put("dayId", snapshot.getDayId().getValue());
-        node.put("date", snapshot.getDate().toString());
-        node.put("archived", snapshot.getIsArchived().toString());
-        node.put("cancelled", snapshot.getIsCancelled().toString());
-        node.put("scheduled", snapshot.getIsScheduled().toString());
+        node.put("dayId", snapshot.dayId().value());
+        node.put("date", snapshot.date().toString());
+        node.put("archived", snapshot.isArchived().toString());
+        node.put("cancelled", snapshot.isCancelled().toString());
+        node.put("scheduled", snapshot.isScheduled().toString());
         val slotsNode = objectMapper.createArrayNode();
         snapshot
-                .getSlots()
+                .slots()
                 .forEach(
                         slot -> {
                             val slotNode = objectMapper.createObjectNode();
-                            slotNode.put("slotId", slot.getSlotId().getValue());
-                            slotNode.put("startTime", slot.getStartTime().toString());
-                            slotNode.put("duration", slot.getDuration().getSeconds());
-                            slotNode.put("booked", slot.getBooked());
+                            slotNode.put("slotId", slot.slotId().value());
+                            slotNode.put("startTime", slot.startTime().toString());
+                            slotNode.put("duration", slot.duration().getSeconds());
+                            slotNode.put("booked", slot.booked());
                             slotsNode.add(slotNode);
                         });
         node.set("slots", slotsNode);

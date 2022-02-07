@@ -1,6 +1,5 @@
 package com.eventstore.scheduling.controllers;
 
-import com.eventstore.scheduling.domain.doctorday.Day;
 import com.eventstore.scheduling.domain.doctorday.DayId;
 import com.eventstore.scheduling.domain.doctorday.event.CalendarDayStarted;
 import com.eventstore.scheduling.domain.readmodel.availableslots.AvailableSlotsRepository;
@@ -9,7 +8,6 @@ import com.eventstore.scheduling.eventsourcing.CommandMetadata;
 import com.eventstore.scheduling.eventsourcing.CorrelationId;
 import com.eventstore.scheduling.eventsourcing.EventStore;
 import com.eventstore.scheduling.infrastructure.commands.Dispatcher;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -57,7 +55,7 @@ public class ApiController {
         dispatcher.dispatch(scheduleDay.toCommand(), CommandMetadata.of(correlationId, causationId));
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .header("Location", "/slots/" + scheduleDay.toCommand().getDate() + "/available")
+                .header("Location", "/slots/%s/available".formatted(scheduleDay.toCommand().date()))
                 .body(null);
     }
 

@@ -35,15 +35,15 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val scheduleDay = new ScheduleDay(doctorId, today, slots);
 
 
-    val dayScheduled = new DayScheduled(dayId, scheduleDay.getDoctorId(), scheduleDay.getDate());
+    val dayScheduled = new DayScheduled(dayId, scheduleDay.doctorId(), scheduleDay.date());
     List<Object> slotsScheduled =
         slots.map(
             (slot) ->
                 new SlotScheduled(
                     SlotId.create(idGenerator),
-                    dayScheduled.getDayId(),
-                    LocalDateTime.of(today, slot.getStartTime()),
-                    slot.getDuration()));
+                    dayScheduled.dayId(),
+                    LocalDateTime.of(today, slot.startTime()),
+                    slot.duration()));
 
     given();
     when(scheduleDay);
@@ -69,13 +69,13 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
 
-    val bookSlot = new BookSlot(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+    val bookSlot = new BookSlot(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
 
     given(dayScheduled, slotScheduled);
     when(bookSlot);
-    then(List.of(new SlotBooked(dayId, slotScheduled.getSlotId(), bookSlot.getPatientId())));
+    then(List.of(new SlotBooked(dayId, slotScheduled.slotId(), bookSlot.patientId())));
   }
 
   @Test
@@ -83,10 +83,10 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
-    val slotBooked = new SlotBooked(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
+    val slotBooked = new SlotBooked(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
 
-    val bookSlot = new BookSlot(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+    val bookSlot = new BookSlot(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
 
     given(dayScheduled, slotScheduled, slotBooked);
     when(bookSlot);
@@ -117,14 +117,14 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
-    val slotBooked = new SlotBooked(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
+    val slotBooked = new SlotBooked(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
 
-    val cancel = new CancelSlotBooking(dayId, slotScheduled.getSlotId(), randomString());
+    val cancel = new CancelSlotBooking(dayId, slotScheduled.slotId(), randomString());
 
     given(dayScheduled, slotScheduled, slotBooked);
     when(cancel);
-    then(List.of(new SlotBookingCancelled(dayId, slotScheduled.getSlotId(), cancel.getReason())));
+    then(List.of(new SlotBookingCancelled(dayId, slotScheduled.slotId(), cancel.reason())));
   }
 
   @Test
@@ -132,9 +132,9 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
 
-    val cancel = new CancelSlotBooking(dayId, slotScheduled.getSlotId(), randomString());
+    val cancel = new CancelSlotBooking(dayId, slotScheduled.slotId(), randomString());
 
     given(dayScheduled, slotScheduled);
     when(cancel);
@@ -149,7 +149,7 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
 
     List<Object> events = List.of(
             new SlotScheduled(
-                    SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes));
+                    SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes));
 
     given(dayScheduled);
     when(scheduleSlot);
@@ -161,7 +161,7 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
 
     val scheduleSlot = new ScheduleSlot(dayId, tenAm, tenMinutes);
 
@@ -175,13 +175,13 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled =
         new SlotScheduled(
-            SlotId.create(randomIdGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
+            SlotId.create(randomIdGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
 
     val scheduleSlot = new ScheduleSlot(dayId, tenAm.plusMinutes(10), tenMinutes);
     List<Object> events = List.of(
             new SlotScheduled(
                     SlotId.create(idGenerator),
-                    dayScheduled.getDayId(),
+                    dayScheduled.dayId(),
                     tenAmToday.plusMinutes(10),
                     tenMinutes));
 
@@ -195,14 +195,14 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
     val slotScheduled1 =
         new SlotScheduled(
-            SlotId.create(idGenerator), dayScheduled.getDayId(), tenAmToday, tenMinutes);
+            SlotId.create(idGenerator), dayScheduled.dayId(), tenAmToday, tenMinutes);
     val slotScheduled2 =
         new SlotScheduled(
             SlotId.create(idGenerator),
-            dayScheduled.getDayId(),
+            dayScheduled.dayId(),
             tenAmToday.plusMinutes(10),
             tenMinutes);
-    val slotBooked = new SlotBooked(dayId, slotScheduled1.getSlotId(), new PatientId("John Doe"));
+    val slotBooked = new SlotBooked(dayId, slotScheduled1.slotId(), new PatientId("John Doe"));
 
     String reason = "doctor cancelled the day";
     val cancelDaySchedule = new CancelDaySchedule(dayId);
@@ -211,10 +211,10 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
     when(cancelDaySchedule);
     then(
         List.of(
-            new SlotBookingCancelled(dayId, slotScheduled1.getSlotId(), reason),
-            new SlotScheduleCancelled(dayId, slotScheduled1.getSlotId()),
-            new SlotScheduleCancelled(dayId, slotScheduled2.getSlotId()),
-            new DayScheduleCancelled(dayScheduled.getDayId(), reason)));
+            new SlotBookingCancelled(dayId, slotScheduled1.slotId(), reason),
+            new SlotScheduleCancelled(dayId, slotScheduled1.slotId()),
+            new SlotScheduleCancelled(dayId, slotScheduled2.slotId()),
+            new DayScheduleCancelled(dayScheduled.dayId(), reason)));
   }
 
   @Test
@@ -227,7 +227,7 @@ public class DayTests extends AggregateTest<Day, DayRepository> {
   @Test
   void archiveCancelledDay() {
     val dayScheduled = new DayScheduled(dayId, doctorId, today);
-    val dayScheduleCancelled = new DayScheduleCancelled(dayScheduled.getDayId(), "Called in sick");
+    val dayScheduleCancelled = new DayScheduleCancelled(dayScheduled.dayId(), "Called in sick");
 
     given(dayScheduled, dayScheduleCancelled);
     when(new ArchiveDaySchedule(dayId));

@@ -8,9 +8,9 @@ import com.eventstore.scheduling.eventsourcing.SnapshotEnvelope;
 import io.vavr.Tuple2;
 
 public class EventStoreSerde {
-    private EsEventSerde eventSerde = new EsEventSerde();
-    private EsCommandSerde commandSerde = new EsCommandSerde();
-    private EsSnapshotSerde snapshotSerde = new EsSnapshotSerde();
+    private final EsEventSerde eventSerde = new EsEventSerde();
+    private final EsCommandSerde commandSerde = new EsCommandSerde();
+    private final EsSnapshotSerde snapshotSerde = new EsSnapshotSerde();
     public EventData serializeCommand(Object command, CommandMetadata metadata) {
         return commandSerde.serialize(command, metadata);
     }
