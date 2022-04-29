@@ -4,7 +4,7 @@
 
 ## Prerequisities
 
-You'll need to have [Java 8 (or later)](https://dotnet.microsoft.com/download/dotnet/6.0) and [docker](https://www.docker.com/products/docker-desktop) installed to be able to run the project and tests. You'll need to also have Java IDE (e.g. IntelliJ, Visual Studio Code, or other preferred one).
+You'll need to have [Java 8 (or later)](https://www.java.com/en/download/help/download_options.html) and [docker](https://www.docker.com/products/docker-desktop) installed to be able to run the project and tests. You'll need to also have Java IDE (e.g. IntelliJ, Visual Studio Code, or other preferred one).
 
 ## Steps
 
