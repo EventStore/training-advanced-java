@@ -1,0 +1,49 @@
+name: Build and test
+
+on:
+  # run it on push to the default repository branch
+  push:
+    branches: [main]
+  # run it during pull request
+  pull_request:
+
+jobs:
+  build-and-test-code:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    strategy:
+      # define the test matrix
+      matrix:
+        # selected node version to run CI
+        java-version: [8, 17]
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Start containers
+        run: docker-compose up -d
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: "adopt"
+          cache: gradle
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: clean test
+          gradle-version: wrapper
+
+      - name: Archive test report
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Test report
+          path: ./build/test-results/test
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose down
