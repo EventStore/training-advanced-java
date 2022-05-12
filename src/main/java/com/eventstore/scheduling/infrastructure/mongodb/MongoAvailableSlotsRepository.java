@@ -58,11 +58,11 @@ public class MongoAvailableSlotsRepository implements AvailableSlotsRepository {
 
   @Override
   public void deleteSlot(SlotId slotId) {
-    collection.findOneAndDelete(eq("data.slotId", slotId.getValue()));
+    collection.findOneAndDelete(eq("data.slotId", slotId.value()));
   }
 
   private void setStatus(SlotId slotId, boolean hidden) {
-    collection.findOneAndUpdate(eq("data.slotId", slotId.getValue()), set("hidden", hidden));
+    collection.findOneAndUpdate(eq("data.slotId", slotId.value()), set("hidden", hidden));
   }
 
   @EqualsAndHashCode(callSuper=false)

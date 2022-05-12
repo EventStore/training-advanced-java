@@ -4,49 +4,48 @@ import com.eventstore.scheduling.domain.doctorday.SlotId;
 import com.eventstore.scheduling.domain.doctorday.command.*;
 import com.eventstore.scheduling.infrastructure.commands.CommandHandler;
 import lombok.val;
-import lombok.var;
 
 public class Handlers extends CommandHandler {
     public Handlers(DayRepository dayRepository, IdGenerator idGenerator) {
         register(ScheduleDay.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.schedule(command.getDoctorId(), command.getDate(), command.getSlots(), idGenerator);
+            val aggregate = dayRepository.get(command.dayId());
+            aggregate.schedule(command.doctorId(), command.date(), command.slots(), idGenerator);
             dayRepository.save(aggregate, metadata);
         });
         register(ScheduleSlot.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.scheduleSlot(SlotId.create(idGenerator), command.getStartTime(), command.getDuration());
+            val aggregate = dayRepository.get(command.dayId());
+            aggregate.scheduleSlot(SlotId.create(idGenerator), command.startTime(), command.duration());
             dayRepository.save(aggregate, metadata);
         });
         register(BookSlot.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.bookSlot(command.getSlotId(), command.getPatientId());
+            val aggregate = dayRepository.get(command.dayId());
+            aggregate.bookSlot(command.slotId(), command.patientId());
             dayRepository.save(aggregate, metadata);
         });
         register(CancelSlotBooking.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
-            aggregate.cancelBookedSlot(command.getSlotId(), command.getReason());
+            val aggregate = dayRepository.get(command.dayId());
+            aggregate.cancelBookedSlot(command.slotId(), command.reason());
             dayRepository.save(aggregate, metadata);
         });
         register(CancelDaySchedule.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
+            val aggregate = dayRepository.get(command.dayId());
             aggregate.cancel();
             dayRepository.save(aggregate, metadata);
         });
         register(ArchiveDaySchedule.class, tuple -> {
             val command = tuple._1;
             val metadata = tuple._2;
-            val aggregate = dayRepository.get(command.getDayId());
+            val aggregate = dayRepository.get(command.dayId());
             aggregate.archive();
             dayRepository.save(aggregate, metadata);
         });
