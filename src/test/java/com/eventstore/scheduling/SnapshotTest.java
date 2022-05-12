@@ -42,7 +42,7 @@ public class SnapshotTest implements TestEventStoreConnection {
         );
 
         Thread.sleep(200);
-        assertEquals(snapshot, eventStoreClient.loadSnapshot("doctorday-" + dayId.getValue()).getSnapshot());
+        assertEquals(snapshot, eventStoreClient.loadSnapshot("doctorday-%s".formatted(dayId.value())).snapshot());
     }
     @SneakyThrows
     @Test
@@ -60,8 +60,8 @@ public class SnapshotTest implements TestEventStoreConnection {
         esAggregateStore.save(aggregate, metadata);
 
         Thread.sleep(200);
-        eventStoreClient.truncateStream("doctorday-" + anotherDayId.getValue(), eventStoreClient.getLastVersion("doctorday-" +anotherDayId.getValue()) + 1);
-        val reloadedAggregate = esAggregateStore.load(new Day(), anotherDayId.getValue());
+        eventStoreClient.truncateStream("doctorday-%s".formatted(anotherDayId.value()), eventStoreClient.getLastVersion("doctorday-%s".formatted(anotherDayId.value())) + 1);
+        val reloadedAggregate = esAggregateStore.load(new Day(), anotherDayId.value());
 
         assertEquals(reloadedAggregate.getVersion(), 5L);
     }

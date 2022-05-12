@@ -39,18 +39,18 @@ public class AvailableSlotsHandlerTestv2 extends HandlerTest implements TestMong
         repository.getAvailableSlotsOn(today),
         List.of(
             new AvailableSlot(
-                slotScheduled.getDayId(),
-                slotScheduled.getSlotId(),
-                slotScheduled.getStartDateTime().toLocalDate(),
-                slotScheduled.getStartDateTime().toLocalTime(),
-                slotScheduled.getDuration().toString())));
+                slotScheduled.dayId(),
+                slotScheduled.slotId(),
+                slotScheduled.startDateTime().toLocalDate(),
+                slotScheduled.startDateTime().toLocalTime(),
+                slotScheduled.duration().toString())));
   }
 
   @Test
   void shouldHideSlotFromTheListIfWasBooked() {
     val slotScheduled =
         new SlotScheduled(SlotId.create(idGenerator), dayId, tenAmToday, tenMinutes);
-    val slotBooked = new SlotBooked(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+    val slotBooked = new SlotBooked(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
 
     given(List.of(slotScheduled, slotBooked));
     then(repository.getAvailableSlotsOn(today), List.empty());
@@ -60,26 +60,26 @@ public class AvailableSlotsHandlerTestv2 extends HandlerTest implements TestMong
   void shouldShowSlotIfBookingWasCancelled() {
     val slotScheduled =
         new SlotScheduled(SlotId.create(idGenerator), dayId, tenAmToday, tenMinutes);
-    val slotBooked = new SlotBooked(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
-    val slotBookingCancelled = new SlotBookingCancelled(dayId, slotScheduled.getSlotId(), "Don't need it");
+    val slotBooked = new SlotBooked(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
+    val slotBookingCancelled = new SlotBookingCancelled(dayId, slotScheduled.slotId(), "Don't need it");
 
     given(List.of(slotScheduled, slotBooked, slotBookingCancelled));
     then(
         repository.getAvailableSlotsOn(today),
         List.of(
             new AvailableSlot(
-                slotScheduled.getDayId(),
-                slotScheduled.getSlotId(),
-                slotScheduled.getStartDateTime().toLocalDate(),
-                slotScheduled.getStartDateTime().toLocalTime(),
-                slotScheduled.getDuration().toString())));
+                slotScheduled.dayId(),
+                slotScheduled.slotId(),
+                slotScheduled.startDateTime().toLocalDate(),
+                slotScheduled.startDateTime().toLocalTime(),
+                slotScheduled.duration().toString())));
   }
 
   @Test
   void shouldDeleteSlotIfSlotWasCancelled() {
     val slotScheduled =
         new SlotScheduled(SlotId.create(idGenerator), dayId, tenAmToday, tenMinutes);
-    val slotCancelled = new SlotScheduleCancelled(dayId, slotScheduled.getSlotId());
+    val slotCancelled = new SlotScheduleCancelled(dayId, slotScheduled.slotId());
 
     given(List.of(slotScheduled, slotCancelled));
     then(repository.getAvailableSlotsOn(today), List.empty());

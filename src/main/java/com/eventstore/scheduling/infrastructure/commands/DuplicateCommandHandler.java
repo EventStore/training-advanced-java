@@ -9,6 +9,6 @@ public class DuplicateCommandHandler extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return "A handler has already been registered for " + clazz.getName();
+        return "A handler has already been registered for %s".formatted(clazz.getName());
     }
 }

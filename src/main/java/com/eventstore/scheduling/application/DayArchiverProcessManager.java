@@ -37,7 +37,7 @@ public class DayArchiverProcessManager extends EventHandler {
         this.commandStore = commandStore;
         this.idGenerator = idGenerator;
 
-        when(DayScheduled.class, dayScheduled -> repository.add(dayScheduled._1.getDate(), dayScheduled._1.getDayId()));
+        when(DayScheduled.class, dayScheduled -> repository.add(dayScheduled._1.date(), dayScheduled._1.dayId()));
 
         when(DayScheduleArchived.class, dayScheduleArchived -> {
             // Get events from store
@@ -47,9 +47,9 @@ public class DayArchiverProcessManager extends EventHandler {
         });
 
         when(CalendarDayStarted.class, calendarDayStarted -> {
-            val date = calendarDayStarted._1.getDate();
+            val date = calendarDayStarted._1.date();
             val archivableDays = repository.findAll(date.minus(archiveThreshold));
-            archivableDays.forEach(dayId -> sendArchiveCommand(dayId, calendarDayStarted._2.getCorrelationId()));
+            archivableDays.forEach(dayId -> sendArchiveCommand(dayId, calendarDayStarted._2.correlationId()));
         });
     }
 

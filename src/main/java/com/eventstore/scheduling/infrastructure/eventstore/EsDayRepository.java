@@ -15,7 +15,7 @@ public class EsDayRepository implements DayRepository {
 
     @Override
     public Day get(DayId dayId) {
-        return aggregateStore.load(new Day(), dayId.getValue());
+        return aggregateStore.load(new Day(), dayId.value());
     }
 
     @Override

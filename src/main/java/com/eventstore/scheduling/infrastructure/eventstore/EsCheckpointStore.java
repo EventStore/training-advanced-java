@@ -18,7 +18,7 @@ public class EsCheckpointStore implements CheckpointStore {
 
   public EsCheckpointStore(EventStoreDBClient client, String subscriptionName) {
     this.client = client;
-    this.subscriptionName = "checkpoint-" + subscriptionName;
+    this.subscriptionName = "checkpoint-%s".formatted(subscriptionName);
   }
 
   @Override
@@ -50,7 +50,7 @@ public class EsCheckpointStore implements CheckpointStore {
   @SneakyThrows
   private EventData serialize(Checkpoint checkpoint) {
     val node = objectMapper.createObjectNode();
-    node.put("checkpoint", checkpoint.getValue());
+    node.put("checkpoint", checkpoint.value());
     return new EventData(
             UUID.randomUUID(),
             "$checkpoint",

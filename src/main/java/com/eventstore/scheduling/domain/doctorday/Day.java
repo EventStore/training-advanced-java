@@ -46,13 +46,13 @@ public class Day extends AggregateRootSnapshot {
     }
 
     private void loadDaySnapshot(DaySnapshot snapshot) {
-        setId(snapshot.getDayId().getValue());
-        slots = new Slots(snapshot.getSlots());
-        isArchived = snapshot.getIsArchived();
-        isCancelled = snapshot.getIsCancelled();
-        isScheduled = snapshot.getIsScheduled();
-        dayId = snapshot.getDayId();
-        date = snapshot.getDate();
+        setId(snapshot.dayId().value());
+        slots = new Slots(snapshot.slots());
+        isArchived = snapshot.isArchived();
+        isCancelled = snapshot.isCancelled();
+        isScheduled = snapshot.isScheduled();
+        dayId = snapshot.dayId();
+        date = snapshot.date();
     }
 
     @SneakyThrows
@@ -76,7 +76,7 @@ public class Day extends AggregateRootSnapshot {
         raise(new DayScheduled(dayId, doctorId, date));
 
         slots.forEach(slot -> {
-            raise(new SlotScheduled(SlotId.create(idGenerator), dayId, LocalDateTime.of(date, slot.getStartTime()), slot.getDuration()));
+            raise(new SlotScheduled(SlotId.create(idGenerator), dayId, LocalDateTime.of(date, slot.startTime()), slot.duration()));
         });
     }
 
@@ -131,21 +131,21 @@ public class Day extends AggregateRootSnapshot {
         isNotScheduled();
 
         slots.getBookedSlots().forEach(slot -> {
-            raise(new SlotBookingCancelled(dayId, slot.getSlotId(), "doctor cancelled the day"));
+            raise(new SlotBookingCancelled(dayId, slot.slotId(), "doctor cancelled the day"));
         });
 
         slots.getSlots().forEach(slot -> {
-            raise(new SlotScheduleCancelled(dayId, slot.getSlotId()));
+            raise(new SlotScheduleCancelled(dayId, slot.slotId()));
         });
 
         raise(new DayScheduleCancelled(dayId, "doctor cancelled the day"));
     }
 
     private void when(DayScheduled event) {
-        dayId = event.getDayId();
-        setId(dayId.getValue());
+        dayId = event.dayId();
+        setId(dayId.value());
         isScheduled = true;
-        date = event.getDate();
+        date = event.date();
     }
 
     private void when(SlotScheduled event) {
@@ -153,15 +153,15 @@ public class Day extends AggregateRootSnapshot {
     }
 
     private void when(SlotBooked event) {
-        slots.markAsBooked(event.getSlotId());
+        slots.markAsBooked(event.slotId());
     }
 
     private void when(SlotBookingCancelled event) {
-        slots.markAsAvailable(event.getSlotId());
+        slots.markAsAvailable(event.slotId());
     }
 
     private void when(SlotScheduleCancelled event) {
-        slots.remove(event.getSlotId());
+        slots.remove(event.slotId());
     }
 
     private void when(DayScheduleCancelled event) {

@@ -46,8 +46,8 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
         val slotScheduled2 =
                 new SlotScheduled(
                         SlotId.create(idGenerator), dayId, tenAmToday.plusMinutes(10), tenMinutes);
-        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.getSlotId(), patientId);
-        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.getSlotId(), patientId);
+        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.slotId(), patientId);
+        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.slotId(), patientId);
 
         given(List.of(slotScheduled1, slotScheduled2, slotBooked1, slotBooked2));
         then(repository.countByPatientAndMonth(patientId, today.getMonth()), 2);
@@ -61,10 +61,10 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
         val slotScheduled2 =
                 new SlotScheduled(
                         SlotId.create(idGenerator), dayId, tenAmToday.plusMinutes(10), tenMinutes);
-        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.getSlotId(), patientId);
-        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.getSlotId(), patientId);
+        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.slotId(), patientId);
+        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.slotId(), patientId);
         val slotBookingCancelled =
-                new SlotBookingCancelled(dayId, slotScheduled2.getSlotId(), "No longer needed");
+                new SlotBookingCancelled(dayId, slotScheduled2.slotId(), "No longer needed");
 
         given(List.of(slotScheduled1, slotScheduled2, slotBooked1, slotBooked2, slotBookingCancelled));
         then(repository.countByPatientAndMonth(patientId, today.getMonth()), 1);
@@ -87,10 +87,10 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
         val slotScheduled4 =
                 new SlotScheduled(
                         SlotId.create(idGenerator), dayId, tenAmToday.plusMinutes(30), tenMinutes);
-        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.getSlotId(), patientId);
-        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.getSlotId(), patientId);
-        val slotBooked3 = new SlotBooked(dayId, slotScheduled3.getSlotId(), patientId);
-        val slotBooked4 = new SlotBooked(dayId, slotScheduled4.getSlotId(), patientId);
+        val slotBooked1 = new SlotBooked(dayId, slotScheduled1.slotId(), patientId);
+        val slotBooked2 = new SlotBooked(dayId, slotScheduled2.slotId(), patientId);
+        val slotBooked3 = new SlotBooked(dayId, slotScheduled3.slotId(), patientId);
+        val slotBooked4 = new SlotBooked(dayId, slotScheduled4.slotId(), patientId);
 
         given(
                 List.of(
@@ -106,8 +106,8 @@ public class OverbookingProcessManagerTest extends HandlerTest implements TestEv
         Thread.sleep(100);
         then(repository.countByPatientAndMonth(patientId, today.getMonth()), 4);
         then(
-                eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::getCommand),
-                List.of(new CancelSlotBooking(dayId, slotBooked4.getSlotId(), "Overbooking"))
+                eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::command),
+                List.of(new CancelSlotBooking(dayId, slotBooked4.slotId(), "Overbooking"))
         );
     }
 }
