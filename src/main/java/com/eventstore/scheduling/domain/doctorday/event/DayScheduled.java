@@ -8,9 +8,8 @@ import lombok.NonNull;
 
 import java.time.LocalDate;
 
-@Data
-public class DayScheduled implements Event {
-  private final @NonNull DayId dayId;
-  private final @NonNull DoctorId doctorId;
-  private final @NonNull LocalDate date;
-}
+public record DayScheduled(
+    @NonNull DayId dayId,
+    @NonNull DoctorId doctorId,
+    @NonNull LocalDate date
+) implements Event {}

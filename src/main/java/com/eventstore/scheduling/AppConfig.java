@@ -59,7 +59,7 @@ public class AppConfig {
 
     public AppConfig() {
 
-        EventStoreDBClientSettings setts = EventStoreDBConnectionString.parseOrThrow("esdb://admin:changeit@localhost:2113?tlsVerifyCert=false&tls=false");
+        EventStoreDBClientSettings setts = EventStoreDBConnectionString.parseOrThrow("esdb://localhost:2113?tls=false");
         EventStoreDBClient client = EventStoreDBClient.create(setts);
 
         String tenantPrefix = "prod";
