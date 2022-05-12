@@ -6,7 +6,6 @@ import lombok.NonNull;
 
 import java.time.LocalDate;
 
-@Data
-public class CalendarDayStarted implements Event {
-  private final @NonNull LocalDate date;
-}
+public record CalendarDayStarted(
+    @NonNull LocalDate date
+) implements Event {}

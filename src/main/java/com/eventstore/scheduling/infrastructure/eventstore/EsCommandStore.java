@@ -34,7 +34,7 @@ public class EsCommandStore implements CommandStore {
     @SneakyThrows
     @Override
     public void start() {
-        streamsClient.subscribeToStream("[" + tenantPrefix + "]" + streamName, new Listener(), SubscribeToStreamOptions.get().fromEnd()).get();
+        streamsClient.subscribeToStream("[%s]%s".formatted(tenantPrefix, streamName), new Listener(), SubscribeToStreamOptions.get().fromEnd()).get();
     }
 
     private void eventAppeared(ResolvedEvent event) {

@@ -27,15 +27,14 @@ import java.util.UUID;
 
 import static io.vavr.API.*;
 import static io.vavr.Predicates.instanceOf;
-import static io.vavr.Predicates.is;
 
 public class EsCommandSerde {
     ObjectMapper objectMapper = new ObjectMapper();
 
     public EventData serialize(Object data, CommandMetadata metadata) {
         val metadataNode = objectMapper.createObjectNode();
-        metadataNode.put("correlationId", metadata.getCorrelationId().getValue());
-        metadataNode.put("causationId", metadata.getCausationId().getValue());
+        metadataNode.put("correlationId", metadata.correlationId().value());
+        metadataNode.put("causationId", metadata.causationId().value());
 
         val node = objectMapper.createObjectNode();
         return Match(data)
@@ -43,17 +42,17 @@ public class EsCommandSerde {
                         Case(
                                 $(instanceOf(ScheduleDay.class)),
                                 scheduleDay -> {
-                                    node.put("dayId", scheduleDay.getDayId().getValue());
-                                    node.put("doctorId", scheduleDay.getDoctorId().getValue());
-                                    node.put("date", scheduleDay.getDate().toString());
+                                    node.put("dayId", scheduleDay.dayId().value());
+                                    node.put("doctorId", scheduleDay.doctorId().value());
+                                    node.put("date", scheduleDay.date().toString());
                                     val slotsNode = objectMapper.createArrayNode();
                                     scheduleDay
-                                            .getSlots()
+                                            .slots()
                                             .forEach(
                                                     slot -> {
                                                         val slotNode = objectMapper.createObjectNode();
-                                                        slotNode.put("startTime", slot.getStartTime().toString());
-                                                        slotNode.put("duration", slot.getDuration().toString());
+                                                        slotNode.put("startTime", slot.startTime().toString());
+                                                        slotNode.put("duration", slot.duration().toString());
                                                         slotsNode.add(slotNode);
                                                     });
                                     node.set("slots", slotsNode);
@@ -62,15 +61,15 @@ public class EsCommandSerde {
                         Case(
                                 $(instanceOf(CancelSlotBooking.class)),
                                 cancelSlotBooking -> {
-                                    node.put("dayId", cancelSlotBooking.getDayId().getValue());
-                                    node.put("slotId", cancelSlotBooking.getSlotId().getValue());
-                                    node.put("reason", cancelSlotBooking.getReason());
+                                    node.put("dayId", cancelSlotBooking.dayId().value());
+                                    node.put("slotId", cancelSlotBooking.slotId().value());
+                                    node.put("reason", cancelSlotBooking.reason());
                                     return toProposedEvent("command-cancel-slot-booking", node, metadataNode);
                                 }),
                         Case(
                                 $(instanceOf(ArchiveDaySchedule.class)),
                                 archiveDaySchedule -> {
-                                    node.put("dayId", archiveDaySchedule.getDayId().getValue());
+                                    node.put("dayId", archiveDaySchedule.dayId().value());
                                     return toProposedEvent("command-archive", node, metadataNode);
                                 }));
     }
@@ -91,31 +90,31 @@ public class EsCommandSerde {
         RecordedEvent event = resolvedEvent.getEvent();
         val data = objectMapper.readTree(event.getEventData());
         val deserialized =
-                Match(event.getEventType())
-                        .of(
-                                Case(
-                                        $(is("command-schedule-day")),
-                                        () ->
-                                                new ScheduleDay(
-                                                        new DoctorId(data.get("doctorId").asText()),
-                                                        LocalDate.parse(data.get("date").asText()),
-                                                        List.ofAll(data.get("slots"))
-                                                                .map(
-                                                                        node ->
-                                                                                new ScheduleSlot(
-                                                                                        new DayId(node.get("dayId").asText()),
-                                                                                        LocalTime.parse(node.get("startTime").asText()),
-                                                                                        Duration.parse(node.get("duration").asText()))))),
-                                Case(
-                                        $(is("command-cancel-slot-booking")),
-                                        () ->
-                                                new CancelSlotBooking(
-                                                        new DayId(data.get("dayId").asText()),
-                                                        new SlotId(data.get("slotId").asText()),
-                                                        data.get("reason").asText())),
-                                Case($(is("command-archive")), () ->
-                                        new ArchiveDaySchedule(
-                                                new DayId(data.get("dayId").asText()))));
+            switch (event.getEventType()) {
+                case "command-schedule-day" ->
+                    new ScheduleDay(
+                        new DoctorId(data.get("doctorId").asText()),
+                        LocalDate.parse(data.get("date").asText()),
+                        List.ofAll(data.get("slots"))
+                            .map(node ->
+                                new ScheduleSlot(
+                                    new DayId(node.get("dayId").asText()),
+                                    LocalTime.parse(node.get("startTime").asText()),
+                                    Duration.parse(node.get("duration").asText())
+                                )
+                            )
+                    );
+                case "command-cancel-slot-booking" ->
+                    new CancelSlotBooking(
+                        new DayId(data.get("dayId").asText()),
+                        new SlotId(data.get("slotId").asText()),
+                        data.get("reason").asText()
+                    );
+                case "command-archive" ->
+                    new ArchiveDaySchedule(new DayId(data.get("dayId").asText()));
+
+                default -> throw new IllegalStateException("Unexpected value: %s".formatted(event.getEventType()));
+            };
         val metadata = objectMapper.readTree(event.getUserMetadata());
         val correlationId = new CorrelationId(metadata.get("correlationId").asText());
         val causationId = new CausationId(metadata.get("causationId").asText());
