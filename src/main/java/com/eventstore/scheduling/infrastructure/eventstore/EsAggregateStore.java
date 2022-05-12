@@ -1,10 +1,7 @@
 package com.eventstore.scheduling.infrastructure.eventstore;
 
 import com.eventstore.scheduling.eventsourcing.*;
-import io.vavr.collection.List;
-import lombok.SneakyThrows;
 import lombok.val;
-import lombok.var;
 
 import static io.vavr.API.Some;
 
@@ -20,13 +17,13 @@ public class EsAggregateStore implements AggregateStore {
   @Override
   public <T extends AggregateRoot> void save(T aggregate, CommandMetadata metadata) {
     val changes = aggregate.getChanges();
-    eventStore.appendEvents("doctorday-" + aggregate.getId(), aggregate.getVersion(), metadata, changes);
+    eventStore.appendEvents("doctorday-%s".formatted(aggregate.getId()), aggregate.getVersion(), metadata, changes);
 
     if (aggregate instanceof AggregateRootSnapshot) {
       val snapshotAggregate = (AggregateRootSnapshot) aggregate;
       if((snapshotAggregate.getVersion() + changes.length() + 1) - snapshotAggregate.getSnapshotVersion() >= snapshotThreshold) {
         eventStore.appendSnapshot(
-                "doctorday-" + aggregate.getId(),
+                "doctorday-%s".formatted(aggregate.getId()),
                 aggregate.getVersion() + changes.length(),
                 snapshotAggregate.getSnapshot(),
                 metadata
@@ -42,7 +39,7 @@ public class EsAggregateStore implements AggregateStore {
       version = loadSnapshot((AggregateRootSnapshot) aggregate, aggregateId, version);
     }
 
-    val events = eventStore.loadEvents("doctorday-" + aggregateId, Some(version));
+    val events = eventStore.loadEvents("doctorday-%s".formatted(aggregateId), Some(version));
 
     aggregate.load(events);
     aggregate.clearChanges();

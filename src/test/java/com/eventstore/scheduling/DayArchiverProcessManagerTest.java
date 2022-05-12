@@ -43,13 +43,13 @@ public class DayArchiverProcessManagerTest extends HandlerTest
     @SneakyThrows
     @Test
     void shouldArchiveAllEventsAndTruncateAllExceptLastOne() {
-        RandomIdGenerator idGenerator = new RandomIdGenerator();
-        DoctorId doctorId = new DoctorId(idGenerator.nextUuid().toString());
-        DayId dayId = new DayId(doctorId, today);
+        val idGenerator = new RandomIdGenerator();
+        val doctorId = new DoctorId(idGenerator.nextUuid().toString());
+        val dayId = new DayId(doctorId, today);
         val aggregateId = new DoctorDayId(dayId);
         val slotScheduled =
                 new SlotScheduled(SlotId.create(this.idGenerator), dayId, tenAmToday, tenMinutes);
-        val slotBooked = new SlotBooked(dayId, slotScheduled.getSlotId(), new PatientId("John Doe"));
+        val slotBooked = new SlotBooked(dayId, slotScheduled.slotId(), new PatientId("John Doe"));
         val archived = new DayScheduleArchived(dayId);
 
         List<Object> events = List.of(slotScheduled, slotBooked, archived);
@@ -74,7 +74,7 @@ public class DayArchiverProcessManagerTest extends HandlerTest
         val calendarDayStarted = new CalendarDayStarted(LocalDate.now());
 
         given(List.of(dayScheduled, calendarDayStarted));
-        then(eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::getCommand),
+        then(eventStoreClient.loadCommands("async-command-handler").map(CommandEnvelope::command),
                 List.of(new ArchiveDaySchedule(dayId)));
     }
 }

@@ -46,7 +46,7 @@ public class MongoBookedSlotsRepository implements BookedSlotsRepository {
   public int countByPatientAndMonth(PatientId patientId, Month month) {
     return (int)
         patientSlots.countDocuments(
-            and(eq("patientId", patientId.getValue()), eq("monthNumber", month.getValue())));
+            and(eq("patientId", patientId.value()), eq("monthNumber", month.getValue())));
   }
 
   @Override
@@ -54,40 +54,46 @@ public class MongoBookedSlotsRepository implements BookedSlotsRepository {
     slotMonths.insertOne(
         new SlotDateRow(
             new ObjectId(),
-            slot.getSlotId().getValue(),
-            slot.getDayId().getValue(),
-            slot.getMonth().getValue()));
+            slot.slotId().value(),
+            slot.dayId().value(),
+            slot.month().getValue()
+        )
+    );
   }
 
   @Override
   public void markSlotAsBooked(SlotId slotId, PatientId patientId) {
-    val maybeSlot = List.ofAll(slotMonths.find(eq("slotId", slotId.getValue()))).headOption();
+    val maybeSlot = List.ofAll(slotMonths.find(eq("slotId", slotId.value()))).headOption();
     maybeSlot.forEach(
         (slotDateRow) -> {
           patientSlots.insertOne(
               new PatientSlotRow(
                   new ObjectId(),
-                  patientId.getValue(),
+                  patientId.value(),
                   slotDateRow.getSlotId(),
-                  slotDateRow.getMonthNumber()));
+                  slotDateRow.getMonthNumber()
+              )
+          );
         });
   }
 
   @Override
   public void markSlotAsAvailable(SlotId slotId) {
-    patientSlots.deleteOne(eq("slotId", slotId.getValue()));
+    patientSlots.deleteOne(eq("slotId", slotId.value()));
   }
 
   @Override
   public Slot getSlot(SlotId slotId) {
-    return List.ofAll(slotMonths.find(eq("slotId", slotId.getValue())))
+    return List.ofAll(slotMonths.find(eq("slotId", slotId.value())))
         .headOption()
         .map(
             (slotMonthRow) ->
                 new Slot(
                     new SlotId(slotMonthRow.getSlotId()),
                     new DayId(slotMonthRow.getDayId()),
-                    Month.of(slotMonthRow.getMonthNumber())))
+                    Month.of(slotMonthRow.getMonthNumber())
+                )
+        )
         .get();
   }
 

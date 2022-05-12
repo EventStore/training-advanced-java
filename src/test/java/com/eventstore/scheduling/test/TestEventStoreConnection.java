@@ -1,13 +1,10 @@
 package com.eventstore.scheduling.test;
 
-import com.eventstore.dbclient.*;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-
-import javax.net.ssl.SSLException;
+import com.eventstore.dbclient.EventStoreDBClient;
+import com.eventstore.dbclient.EventStoreDBClientSettings;
+import com.eventstore.dbclient.EventStoreDBConnectionString;
 
 public interface TestEventStoreConnection {
-  EventStoreDBClientSettings setts = EventStoreDBConnectionString.parseOrThrow("esdb://admin:changeit@localhost:2113?tlsVerifyCert=false&tls=false");
+  EventStoreDBClientSettings setts = EventStoreDBConnectionString.parseOrThrow("esdb://localhost:2113?tls=false");
   EventStoreDBClient client = EventStoreDBClient.create(setts);
 }

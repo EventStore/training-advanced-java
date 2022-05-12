@@ -24,7 +24,7 @@ public class EsEventStore implements EventStore {
     }
 
     private String getPrefixedStreamId(String streamId) {
-        return "[" + tenantPrefix + "]" + streamId;
+        return "[%s]%s".formatted(tenantPrefix, streamId);
     }
 
     @SneakyThrows
@@ -107,7 +107,7 @@ public class EsEventStore implements EventStore {
 
         List<ResolvedEvent> results =
                 Try.of(() -> client
-                    .readStream(getPrefixedStreamId("snapshot-" + streamId), 1, options).get()
+                    .readStream(getPrefixedStreamId("snapshot-%s".formatted(streamId)), 1, options).get()
                 ).map(ReadResult::getEvents).map(List::ofAll).getOrElse(List.empty());
 
         if (results.isEmpty()) {
@@ -122,13 +122,13 @@ public class EsEventStore implements EventStore {
     public void truncateStream(String streamId, Long version) {
         client
                 .appendToStream(
-                        "$$" + getPrefixedStreamId(streamId),
+                        "$$%s".formatted(getPrefixedStreamId(streamId)),
                         List.of(
                                 new EventData(
                                         UUID.randomUUID(),
                                         "$metadata",
                                         "application/json",
-                                        ("{\"$tb\":" + version + "}").getBytes(),
+                                        ("{\"$tb\":%s}".formatted(version)).getBytes(),
                                         "{}".getBytes()))
                                 .iterator())
                 .get();
