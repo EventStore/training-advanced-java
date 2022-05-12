@@ -15,21 +15,21 @@ public class Slots {
     public void add(SlotScheduled slotScheduled) {
         slots = slots.append(
                 new Slot(
-                        slotScheduled.getSlotId(),
-                        slotScheduled.getStartDateTime().toLocalTime(),
-                        slotScheduled.getDuration(),
+                        slotScheduled.slotId(),
+                        slotScheduled.startDateTime().toLocalTime(),
+                        slotScheduled.duration(),
                         false));
     }
 
     public void remove(SlotId slotId) {
-        slots = slots.filter((slot) -> (!slot.getSlotId().equals(slotId)));
+        slots = slots.filter((slot) -> (!slot.slotId().equals(slotId)));
     }
 
     public void markAsBooked(SlotId slotId) {
         slots = slots.map(
                 (slot) -> {
-                    if (slot.getSlotId().equals(slotId)) {
-                        return new Slot(slot.getSlotId(), slot.getStartTime(), slot.getDuration(), true);
+                    if (slot.slotId().equals(slotId)) {
+                        return new Slot(slot.slotId(), slot.startTime(), slot.duration(), true);
                     }
                     return slot;
                 });
@@ -38,8 +38,8 @@ public class Slots {
     public void markAsAvailable(SlotId slotId) {
         slots = slots.map(
                 (slot) -> {
-                    if (slot.getSlotId().equals(slotId)) {
-                        return new Slot(slot.getSlotId(), slot.getStartTime(), slot.getDuration(), false);
+                    if (slot.slotId().equals(slotId)) {
+                        return new Slot(slot.slotId(), slot.startTime(), slot.duration(), false);
                     }
                     return slot;
                 });
@@ -50,8 +50,8 @@ public class Slots {
     }
 
     public SlotStatus getState(SlotId slotId) {
-        return slots.find(slot -> slot.getSlotId().equals(slotId)).map(slot -> {
-            if (slot.getBooked()) {
+        return slots.find(slot -> slot.slotId().equals(slotId)).map(slot -> {
+            if (slot.booked()) {
                 return SlotStatus.Booked;
             } else {
                 return SlotStatus.Available;
@@ -60,10 +60,10 @@ public class Slots {
     }
 
     public boolean hasBookedSlot(SlotId slotId) {
-        return slots.exists(slot -> slot.getSlotId().equals(slotId) && slot.getBooked());
+        return slots.exists(slot -> slot.slotId().equals(slotId) && slot.booked());
     }
 
     public List<Slot> getBookedSlots() {
-        return slots.filter(Slot::getBooked);
+        return slots.filter(Slot::booked);
     }
 }

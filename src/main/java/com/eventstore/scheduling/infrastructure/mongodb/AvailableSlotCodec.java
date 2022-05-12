@@ -31,11 +31,11 @@ public class AvailableSlotCodec implements Codec<AvailableSlot> {
   @Override
   public void encode(BsonWriter writer, AvailableSlot value, EncoderContext encoderContext) {
     writer.writeStartDocument();
-    writer.writeString("dayId", value.getDayId().getValue());
-    writer.writeString("slotId", value.getSlotId().getValue());
-    writer.writeString("date", value.getDate().toString());
-    writer.writeString("time", value.getTime().toString());
-    writer.writeString("duration", value.getDuration());
+    writer.writeString("dayId", value.dayId().value());
+    writer.writeString("slotId", value.slotId().value());
+    writer.writeString("date", value.date().toString());
+    writer.writeString("time", value.time().toString());
+    writer.writeString("duration", value.duration());
     writer.writeEndDocument();
   }
 

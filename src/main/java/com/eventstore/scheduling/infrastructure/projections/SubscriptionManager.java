@@ -27,7 +27,7 @@ public class SubscriptionManager {
 
     @SneakyThrows
     public void start() {
-        val checkpoint = checkpointStore.getCheckpoint().map(c -> new StreamRevision(c.getValue())).getOrElse(StreamRevision.START);
+        val checkpoint = checkpointStore.getCheckpoint().map(c -> new StreamRevision(c.value())).getOrElse(StreamRevision.START);
 
         if (isAllStream) {
             client.subscribeToAll(new Listener(), SubscribeToAllOptions.get().fromPosition(new Position(checkpoint.getValueUnsigned(), checkpoint.getValueUnsigned()))).get();

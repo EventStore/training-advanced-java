@@ -35,12 +35,12 @@ public class MongoArchivableDaysRepository implements ArchivableDaysRepository {
 
   @Override
   public void add(LocalDate date, DayId dayId) {
-    collection.insertOne(new ArchivableDay(new ObjectId(), date.toString(), dayId.getValue()));
+    collection.insertOne(new ArchivableDay(new ObjectId(), date.toString(), dayId.value()));
   }
 
   @Override
   public void remove(DayId dayId) {
-    collection.deleteOne(eq("dayId", dayId.getValue()));
+    collection.deleteOne(eq("dayId", dayId.value()));
   }
 
   @Override

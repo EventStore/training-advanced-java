@@ -9,6 +9,6 @@ public class HandlerNotFound extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return "No handler found for command: " + command.getClass().getName();
+        return "No handler found for command: %s".formatted(command.getClass().getName());
     }
 }
